@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import random
 
 
 class PingSweep:
@@ -14,7 +13,6 @@ class PingSweep:
         self._dangerous_source_ip = False
         self._victim_ip_address_count = 0
         self.t_format = '%Y-%m-%d %H:%M:%S'
-        self._random_sid = random.randrange(1000000, 1999999)
         self._rules_against_attackers = ""
 
     def set_source_ip(self, source_ip):
@@ -39,7 +37,7 @@ class PingSweep:
         return self._additional_dip_packets
 
     def get_snort_rule_string(self):
-        self._rules_against_attackers = "drop icmp {} any -> any icmp (msg:\"PingSweep Reconnaissance Attack\"; classtype:successful-recon-largescale; sid:{}; rev:1;)\n".format(self._source_ip, self._random_sid)
+        self._rules_against_attackers = "drop icmp {} any -> any icmp (msg:\"PingSweep Reconnaissance Attack\"; classtype:successful-recon-largescale; sid:1000003; rev:1;)\n".format(self._source_ip)
         return self._rules_against_attackers
 
     def get_additional_dip_packets_length(self):
