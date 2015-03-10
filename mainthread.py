@@ -5,6 +5,7 @@ import time
 from subprocess import call
 from PacketDB import PacketDB
 from PingSweep import PingSweep
+from SynFlood import SynFlood
 
 db = MySQLdb.connect(host="localhost", user="snort", passwd="123456", db="snort")
 current_alert_db = PacketDB()
