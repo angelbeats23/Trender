@@ -75,6 +75,10 @@ class MainThread(threading.Thread):
             cursor.execute("SELECT timestamp FROM acid_event; ")
             for row in cursor.fetchall():
                 current_alert_db.set_timestamp(row[0])
+            cursor.execute("SELECT sig_class.sig_class_name FROM acid_event,sig_class WHERE "
+                           "acid_event.sig_class_id = sig_class.sig_class_id;")
+            for row in cursor.fetchall():
+                current_alert_db.set_class_name(row[0])
 
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])

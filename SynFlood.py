@@ -5,4 +5,5 @@ class SynFlood:
         self._source_ip = ''
         self._destination_ip = []
         self._timestamp = []
+        self._class_name = []
 

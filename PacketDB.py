@@ -11,6 +11,7 @@ class PacketDB:
         self._timestamp = []
         self._payload = []
         self.icmp_packet_data = []
+        self._class_name = []
 
     def get_sorted_icmp_source_ip_list(self):
         del self.icmp_packet_data[:]
@@ -105,6 +106,15 @@ class PacketDB:
 
     def get_payload(self, payload_location_num):
         return self._payload[payload_location_num]
+
+    def set_class_name(self, name):
+        self._class_name.append(name)
+
+    def get_class_name(self, name_location_num):
+        return self._class_name[name_location_num]
+
+    def get_class_name_length(self):
+        return len(self._class_name)
 
     def empty_database(self):
         self._packet_id = []
