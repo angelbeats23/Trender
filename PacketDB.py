@@ -10,8 +10,66 @@ class PacketDB:
         self._destination_port = []
         self._timestamp = []
         self._payload = []
+        self._class_name_data = []
         self.icmp_packet_data = []
         self._class_name = []
+
+    def get_sorted_syn_source_ip_list(self):
+        del self._class_name_data[:]
+        for item in self._source_ip:
+            if item not in self._class_name_data:
+                self._class_name_data.append(item)
+        return self._class_name_data
+
+    def get_sorted_syn_destination_ip_list(self):
+        del self._class_name_data[:]
+        for item in self._destination_ip:
+            if item not in self._class_name_data:
+                self._class_name_data.append(item)
+        return self._class_name_data
+
+    def get_sorted_syn_destination_port_list(self):
+        del self._class_name_data[:]
+        for item in self._destination_port:
+            if item not in self._class_name_data:
+                self._class_name_data.append(item)
+        return self._class_name_data
+
+    def get_syn_flood_source_ip(self):
+        count = 0
+        del self._class_name_data[:]
+        for item in self._class_name:
+            if item is 'attempted-dos':
+                self._class_name_data.append(self._source_ip[count])
+            count += 1
+        return self._class_name_data
+
+    def get_syn_flood_destination_ip(self):
+        count = 0
+        del self._class_name_data[:]
+        for item in self._class_name:
+            if item is 'attempted-dos':
+                self._class_name_data.append(self._destination_ip[count])
+            count += 1
+        return self._class_name_data
+
+    def get_syn_flood_destination_port(self):
+        count = 0
+        del self._class_name_data[:]
+        for item in self._class_name:
+            if item is 'attempted-dos':
+                self._class_name_data.append(self._destination_port[count])
+            count += 1
+        return self._class_name_data
+
+    def get_syn_flood_timestamp(self):
+        count = 0
+        del self._class_name_data[:]
+        for item in self._class_name:
+            if item is 'attempted-dos':
+                self._class_name_data.append(self._timestamp[count])
+            count += 1
+        return self._class_name_data
 
     def get_sorted_icmp_source_ip_list(self):
         del self.icmp_packet_data[:]

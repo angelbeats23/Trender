@@ -10,6 +10,7 @@ from SynFlood import SynFlood
 db = MySQLdb.connect(host="localhost", user="snort", passwd="123456", db="snort")
 current_alert_db = PacketDB()
 icmp_packet_db = PacketDB()
+syn_packet_db = PacketDB()
 
 
 class MainThread(threading.Thread):
@@ -28,7 +29,9 @@ class MainThread(threading.Thread):
             self.flag_stop_thread = False
             self.mysql_database_retrieval()
             self.create_icmp_packet_db()
+            self.create_syn_packet_db()
             self.check_for_pingsweep_attacks()
+            self.check_for_syn_flood_attacks()
             self.restart_snort(self.flag_file_accessed)
             self.clean_up()
             self.flag_stop_thread = True
@@ -88,6 +91,36 @@ class MainThread(threading.Thread):
             if cursor:
                 cursor.close()
 
+    # identify all syn packets and store them in a object
+    def create_syn_packet_db(self):
+        for sip in current_alert_db.get_syn_flood_source_ip():
+            syn_packet_db.set_source_ip(sip)
+        for dip in current_alert_db.get_syn_flood_destination_ip():
+            syn_packet_db.set_destination_ip(dip)
+        for d_port in current_alert_db.get_syn_flood_destination_port():
+            syn_packet_db.set_destination_port(d_port)
+        for tp in current_alert_db.get_syn_flood_timestamp():
+            syn_packet_db.set_timestamp(str(tp))
+
+    def check_for_syn_flood_attacks(self):
+        syn_flood_db = SynFlood()
+        # identifies every packet that matches every possible packet from the unsorted syn_packet_db
+        for sip_item in syn_packet_db.get_sorted_syn_source_ip_list():
+            for dip_item in syn_packet_db.get_sorted_syn_destination_ip_list():
+                for dport_item in syn_packet_db.get_sorted_syn_destination_port_list():
+                    syn_flood_db.empty_object()
+                    syn_flood_db.set_source_ip(sip_item)
+                    syn_flood_db.set_destination_ip(dip_item)
+                    syn_flood_db.set_destination_port(dport_item)
+                    # searches for every packets timestamp that matches all previous criteria
+                    for packet in range(0, syn_packet_db.get_timestamp_length()):
+                        if sip_item is syn_packet_db.get_source_ip(packet):
+                            if dip_item is syn_packet_db.get_destination_ip(packet):
+                                if dport_item is syn_packet_db.get_destination_port_length(packet):
+                                    syn_flood_db.set_timestamp(syn_packet_db.get_timestamp(packet))
+                    if syn_flood_db.check_all_timestamps() is True:
+                        self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
+
     def create_icmp_packet_db(self):
         for sip in current_alert_db.get_icmp_source_ip():
             icmp_packet_db.set_source_ip(sip)
@@ -108,19 +141,24 @@ class MainThread(threading.Thread):
                 print 'destination ip pingsweep check true'
                 print ping_sweep_db.get_additional_dip_packets()
                 if ping_sweep_db.time_differences_between_packets() is True:
-                    print 'time difference between packets check true'
-                    # change the group and user permission for the file to local user. chown gateway:gateway (file)
-                    rule_file = open("/etc/snort/trender/local.rules.old", "r")
-                    self._snort_rule_file_list = rule_file.readlines()
-                    rule_file.close()
-                    if ping_sweep_db.get_snort_rule_string() in self._snort_rule_file_list:
-                        print "Rule is in List"
-                    else:
-                        self.flag_file_accessed = True
-                        rule_file = open("/etc/snort/trender/local.rules.old", "w")
-                        self._snort_rule_file_list.append(ping_sweep_db.get_snort_rule_string())
-                        rule_file.writelines(self._snort_rule_file_list)
-                        rule_file.close()
+                    self.write_rules_to_file(ping_sweep_db.get_snort_rule_string())
+
+    def write_rules_to_file(self, string_rule):
+        print 'time difference between packets check true'
+        # change the group and user permission for the file to local user. chown gateway:gateway (file)
+        rule_file = open("/etc/snort/trender/local.rules.old", "r")
+        self._snort_rule_file_list = rule_file.readlines()
+        rule_file.close()
+        if string_rule in self._snort_rule_file_list:
+            print "Rule is in List"
+            self._snort_rule_file_list = []
+        else:
+            self.flag_file_accessed = True
+            rule_file = open("/etc/snort/trender/local.rules.old", "w")
+            self._snort_rule_file_list.append(string_rule)
+            rule_file.writelines(self._snort_rule_file_list)
+            rule_file.close()
+            self._snort_rule_file_list = []
 
     def clean_up(self):
         self._snort_rule_file_list = []
