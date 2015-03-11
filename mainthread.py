@@ -32,6 +32,7 @@ class MainThread(threading.Thread):
             self.create_syn_packet_db()
             self.check_for_pingsweep_attacks()
             self.check_for_syn_flood_attacks()
+            self.check_for_syn_flood_attacks_with_random_sip()
             self.restart_snort(self.flag_file_accessed)
             self.clean_up()
             self.flag_stop_thread = True
@@ -120,6 +121,23 @@ class MainThread(threading.Thread):
                     if syn_flood_db.check_all_timestamps() is True:
                         self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
                     syn_flood_db.empty_object()
+
+    def check_for_syn_flood_attacks_with_random_sip(self):
+        syn_flood_db_rd_sip = SynFlood()
+        # identifies every packet that matches every possible packet from the unsorted syn_packet_db
+        for dip_item in syn_packet_db.get_sorted_syn_destination_ip_list():
+            for dport_item in syn_packet_db.get_sorted_syn_destination_port_list():
+                syn_flood_db_rd_sip.set_destination_ip(dip_item)
+                syn_flood_db_rd_sip.set_destination_port(dport_item)
+                # searches for every packets timestamp that matches all previous criteria
+                for packet in range(0, syn_packet_db.get_timestamp_length()):
+                        if dip_item in syn_packet_db.get_destination_ip(packet):
+                            if int(dport_item) is int(syn_packet_db.get_destination_port(packet)):
+                                syn_flood_db_rd_sip.set_random_source_ip_list(syn_packet_db.get_source_ip(packet))
+                                syn_flood_db_rd_sip.set_timestamp(syn_packet_db.get_timestamp(packet))
+                if syn_flood_db_rd_sip.check_timestamps_random_sip() is True:
+                    self.write_rules_to_file(syn_flood_db_rd_sip.get_snort_rule_string_random_sip())
+                syn_flood_db_rd_sip.empty_object()
 
     # identify all icmp packets and store them separately in a object
     def create_icmp_packet_db(self):
