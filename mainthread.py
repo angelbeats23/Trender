@@ -58,14 +58,14 @@ class MainThread(threading.Thread):
             for row in cursor.fetchall():
                 current_alert_db.set_packet_id(row[0])
             cursor.execute("SELECT acid_ip_cache.ipc_fqdn FROM acid_event,acid_ip_cache WHERE "
-                           "acid_event.ip_src = acid_ip_cache.ipc_ip; ")
+                           "acid_event.ip_src = acid_ip_cache.ipc_ip ORDER BY acid_event.cid; ")
             for row in cursor.fetchall():
                 current_alert_db.set_source_ip(row[0])
             cursor.execute("SELECT layer4_sport FROM acid_event; ")
             for row in cursor.fetchall():
                 current_alert_db.set_source_port(row[0])
             cursor.execute("SELECT acid_ip_cache.ipc_fqdn FROM acid_event,acid_ip_cache WHERE "
-                           "acid_event.ip_dst = acid_ip_cache.ipc_ip; ")
+                           "acid_event.ip_dst = acid_ip_cache.ipc_ip ORDER BY acid_event.cid; ")
             for row in cursor.fetchall():
                 current_alert_db.set_destination_ip(row[0])
                 # there is an issue with barnyard storing destination ip addresses in mysql
@@ -81,7 +81,7 @@ class MainThread(threading.Thread):
             cursor.execute("SELECT sig_class.sig_class_name FROM acid_event,sig_class WHERE "
                            "acid_event.sig_class_id = sig_class.sig_class_id;")
             for row in cursor.fetchall():
-                current_alert_db.set_class_name(row[0])
+                current_alert_db.set_class_name(str(row[0]))
 
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])

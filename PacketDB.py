@@ -45,7 +45,7 @@ class PacketDB:
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
-            if item is 'attempted-dos':
+            if 'attempted-dos' in item:
                 self._class_name_data.append(self._source_ip[count])
             count += 1
         return self._class_name_data
@@ -54,7 +54,7 @@ class PacketDB:
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
-            if item is 'attempted-dos':
+            if 'attempted-dos' in item:
                 self._class_name_data.append(self._destination_ip[count])
             count += 1
         return self._class_name_data
@@ -63,7 +63,7 @@ class PacketDB:
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
-            if item is 'attempted-dos':
+            if 'attempted-dos' in item:
                 self._class_name_data.append(self._destination_port[count])
             count += 1
         return self._class_name_data
@@ -72,7 +72,7 @@ class PacketDB:
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
-            if item is 'attempted-dos':
+            if 'attempted-dos' in item:
                 self._class_name_data.append(self._timestamp[count])
             count += 1
         return self._class_name_data

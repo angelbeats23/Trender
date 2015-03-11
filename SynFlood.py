@@ -19,7 +19,7 @@ class SynFlood:
         return self._source_ip
 
     def set_destination_ip(self, destination_ip):
-        self._destination_ip.append(destination_ip)
+        self._destination_ip = destination_ip
 
     def get_destination_ip(self, destination_ip_location_num):
         return self._destination_ip[destination_ip_location_num]
