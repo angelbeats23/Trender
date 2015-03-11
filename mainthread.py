@@ -108,7 +108,6 @@ class MainThread(threading.Thread):
         for sip_item in syn_packet_db.get_sorted_syn_source_ip_list():
             for dip_item in syn_packet_db.get_sorted_syn_destination_ip_list():
                 for dport_item in syn_packet_db.get_sorted_syn_destination_port_list():
-                    syn_flood_db.empty_object()
                     syn_flood_db.set_source_ip(sip_item)
                     syn_flood_db.set_destination_ip(dip_item)
                     syn_flood_db.set_destination_port(dport_item)
@@ -116,11 +115,13 @@ class MainThread(threading.Thread):
                     for packet in range(0, syn_packet_db.get_timestamp_length()):
                         if sip_item is syn_packet_db.get_source_ip(packet):
                             if dip_item is syn_packet_db.get_destination_ip(packet):
-                                if dport_item is syn_packet_db.get_destination_port_length(packet):
+                                if dport_item is syn_packet_db.get_destination_port(packet):
                                     syn_flood_db.set_timestamp(syn_packet_db.get_timestamp(packet))
                     if syn_flood_db.check_all_timestamps() is True:
                         self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
+                    syn_flood_db.empty_object()
 
+    # identify all icmp packets and store them separately in a object
     def create_icmp_packet_db(self):
         for sip in current_alert_db.get_icmp_source_ip():
             icmp_packet_db.set_source_ip(sip)
@@ -130,27 +131,25 @@ class MainThread(threading.Thread):
             icmp_packet_db.set_timestamp(str(tp))
 
     def check_for_pingsweep_attacks(self):
-        for items in icmp_packet_db.get_sorted_icmp_source_ip_list():
-            ping_sweep_db = PingSweep()
-            ping_sweep_db.empty_pingsweep_object()
-            ping_sweep_db.set_source_ip(items)
-            for list_num in range(0, icmp_packet_db.get_source_ip_length()):
-                ping_sweep_db.set_destination_ip(icmp_packet_db.get_destination_ip(list_num))
-                ping_sweep_db.set_timestamp(icmp_packet_db.get_timestamp(list_num))
-            if ping_sweep_db.get_destination_ip_pingsweep_check() is True:
-                print 'destination ip pingsweep check true'
-                print ping_sweep_db.get_additional_dip_packets()
-                if ping_sweep_db.time_differences_between_packets() is True:
-                    self.write_rules_to_file(ping_sweep_db.get_snort_rule_string())
+        ping_sweep_db = PingSweep()
+        # go through every possible source ip address
+        for sip_item in icmp_packet_db.get_sorted_icmp_source_ip_list():
+            ping_sweep_db.set_source_ip(sip_item)
+            # if icmp packet has source ip address add its destination and timestamp
+            for packet in range(0, icmp_packet_db.get_source_ip_length()):
+                if sip_item is icmp_packet_db.get_source_ip(packet):
+                    ping_sweep_db.set_destination_ip(icmp_packet_db.get_destination_ip(packet))
+                    ping_sweep_db.set_timestamp(icmp_packet_db.get_timestamp(packet))
+            if ping_sweep_db.check_all_timestamps() is True:
+                self.write_rules_to_file(ping_sweep_db.get_snort_rule_string())
+            ping_sweep_db.empty_object()
 
     def write_rules_to_file(self, string_rule):
-        print 'time difference between packets check true'
         # change the group and user permission for the file to local user. chown gateway:gateway (file)
         rule_file = open("/etc/snort/trender/local.rules.old", "r")
         self._snort_rule_file_list = rule_file.readlines()
         rule_file.close()
         if string_rule in self._snort_rule_file_list:
-            print "Rule is in List"
             self._snort_rule_file_list = []
         else:
             self.flag_file_accessed = True
@@ -165,6 +164,7 @@ class MainThread(threading.Thread):
         self.flag_file_accessed = False
         current_alert_db.empty_database()
         icmp_packet_db.empty_database()
+        syn_packet_db.empty_database()
 
     # same as killing the thread, give the thread a timeout
     def join(self, timeout=None):

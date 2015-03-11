@@ -37,13 +37,15 @@ class SynFlood:
         return self._timestamp[timestamp_location_num]
 
     def check_all_timestamps(self):
-        if len(self._timestamp) > 1:
+        timestamp_counter = 0
+        if len(self._timestamp) > 10:
             for count in range(0, len(self._timestamp)-1):
                 if (datetime.now() - datetime.strptime(self._timestamp[count], self.t_format)) < timedelta(minutes=20):
                     temp_timestamp = datetime.strptime(self._timestamp[count], self.t_format)
                     temp_timestamp1 = datetime.strptime(temp_timestamp[count+1], self.t_format)
                     if (temp_timestamp1 - temp_timestamp) < timedelta(seconds=2):
-                        if temp_timestamp > 10:
+                        timestamp_counter += 1
+                        if timestamp_counter > 10:
                             self._attack_identified = True
         return self._attack_identified
 
@@ -56,6 +58,7 @@ class SynFlood:
         self._destination_ip = ''
         self._destination_port = ''
         self._timestamp = []
+        self._attack_identified = False
         self._rule_against_attackers = ''
 
 

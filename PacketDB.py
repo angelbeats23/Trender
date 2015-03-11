@@ -17,21 +17,27 @@ class PacketDB:
     def get_sorted_syn_source_ip_list(self):
         del self._class_name_data[:]
         for item in self._source_ip:
-            if item not in self._class_name_data:
+            if item in self._class_name_data:
+                pass
+            else:
                 self._class_name_data.append(item)
         return self._class_name_data
 
     def get_sorted_syn_destination_ip_list(self):
         del self._class_name_data[:]
         for item in self._destination_ip:
-            if item not in self._class_name_data:
+            if item in self._class_name_data:
+                pass
+            else:
                 self._class_name_data.append(item)
         return self._class_name_data
 
     def get_sorted_syn_destination_port_list(self):
         del self._class_name_data[:]
         for item in self._destination_port:
-            if item not in self._class_name_data:
+            if item in self._class_name_data:
+                pass
+            else:
                 self._class_name_data.append(item)
         return self._class_name_data
 
@@ -74,7 +80,9 @@ class PacketDB:
     def get_sorted_icmp_source_ip_list(self):
         del self.icmp_packet_data[:]
         for item in self._source_ip:
-            if item not in self.icmp_packet_data:
+            if item in self.icmp_packet_data:
+                pass
+            else:
                 self.icmp_packet_data.append(item)
         return self.icmp_packet_data
 
@@ -183,4 +191,6 @@ class PacketDB:
         self._destination_port = []
         self._timestamp = []
         self._payload = []
+        self._class_name_data = []
         self.icmp_packet_data = []
+        self._class_name = []
