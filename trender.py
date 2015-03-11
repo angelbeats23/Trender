@@ -23,7 +23,7 @@ def signal_handler(signal, frame):
         flag = m_thread.get_flag()
         while not flag:
             pass
-        print '\nControl+C worked'
+        print '\nExit Program Safely'
         sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)

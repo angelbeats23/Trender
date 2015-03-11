@@ -113,9 +113,9 @@ class MainThread(threading.Thread):
                     syn_flood_db.set_destination_port(dport_item)
                     # searches for every packets timestamp that matches all previous criteria
                     for packet in range(0, syn_packet_db.get_timestamp_length()):
-                        if sip_item is syn_packet_db.get_source_ip(packet):
-                            if dip_item is syn_packet_db.get_destination_ip(packet):
-                                if dport_item is syn_packet_db.get_destination_port(packet):
+                        if sip_item in syn_packet_db.get_source_ip(packet):
+                            if dip_item in syn_packet_db.get_destination_ip(packet):
+                                if int(dport_item) is int(syn_packet_db.get_destination_port(packet)):
                                     syn_flood_db.set_timestamp(syn_packet_db.get_timestamp(packet))
                     if syn_flood_db.check_all_timestamps() is True:
                         self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
@@ -137,7 +137,7 @@ class MainThread(threading.Thread):
             ping_sweep_db.set_source_ip(sip_item)
             # if icmp packet has source ip address add its destination and timestamp
             for packet in range(0, icmp_packet_db.get_source_ip_length()):
-                if sip_item is icmp_packet_db.get_source_ip(packet):
+                if sip_item in icmp_packet_db.get_source_ip(packet):
                     ping_sweep_db.set_destination_ip(icmp_packet_db.get_destination_ip(packet))
                     ping_sweep_db.set_timestamp(icmp_packet_db.get_timestamp(packet))
             if ping_sweep_db.check_all_timestamps() is True:
@@ -150,6 +150,7 @@ class MainThread(threading.Thread):
         self._snort_rule_file_list = rule_file.readlines()
         rule_file.close()
         if string_rule in self._snort_rule_file_list:
+            print 'string already in file', string_rule
             self._snort_rule_file_list = []
         else:
             self.flag_file_accessed = True
@@ -157,6 +158,7 @@ class MainThread(threading.Thread):
             self._snort_rule_file_list.append(string_rule)
             rule_file.writelines(self._snort_rule_file_list)
             rule_file.close()
+            print 'string add to file', string_rule
             self._snort_rule_file_list = []
 
     def clean_up(self):

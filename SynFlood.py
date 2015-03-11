@@ -21,8 +21,8 @@ class SynFlood:
     def set_destination_ip(self, destination_ip):
         self._destination_ip = destination_ip
 
-    def get_destination_ip(self, destination_ip_location_num):
-        return self._destination_ip[destination_ip_location_num]
+    def get_destination_ip(self):
+        return self._destination_ip
 
     def set_destination_port(self, destination_port):
         self._destination_port = destination_port
@@ -42,7 +42,7 @@ class SynFlood:
             for count in range(0, len(self._timestamp)-1):
                 if (datetime.now() - datetime.strptime(self._timestamp[count], self.t_format)) < timedelta(minutes=20):
                     temp_timestamp = datetime.strptime(self._timestamp[count], self.t_format)
-                    temp_timestamp1 = datetime.strptime(temp_timestamp[count+1], self.t_format)
+                    temp_timestamp1 = datetime.strptime(self._timestamp[count+1], self.t_format)
                     if (temp_timestamp1 - temp_timestamp) < timedelta(seconds=2):
                         timestamp_counter += 1
                         if timestamp_counter > 10:
