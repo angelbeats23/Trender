@@ -60,6 +60,3 @@ class SynFlood:
         self._timestamp = []
         self._attack_identified = False
         self._rule_against_attackers = ''
-
-
-
