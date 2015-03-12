@@ -56,7 +56,9 @@ class SynFlood:
         return self._attack_identified
 
     def get_snort_rule_string(self):
-        self._rule_against_attackers = "drop tcp {} any -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; classtype:successful-dos; sid:1000004; rev:1;)\n".format(self._source_ip, self._destination_ip, self._destination_port)
+        self._rule_against_attackers = "drop tcp {} any -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; " \
+                                       "classtype:successful-dos; sid:1000004; " \
+                                       "rev:1;)\n".format(self._source_ip, self._destination_ip, self._destination_port)
         return self._rule_against_attackers
 
     def check_timestamps_random_sip(self):
@@ -86,7 +88,9 @@ class SynFlood:
         return self._rand_source_ips_detected
 
     def get_snort_rule_string_random_sip(self):
-        self._rule_against_attackers_random_sip = "drop tcp any any -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; classtype:successful-dos; sid:1000004; rev:1;)\n".format(self._destination_ip, self._destination_port)
+        self._rule_against_attackers_random_sip = "drop tcp any any -> {} {} (msg:\"Syn Flood Attack\"; " \
+                                                  "flow:stateless flags:S; classtype:successful-dos; sid:1000004; " \
+                                                  "rev:1;)\n".format(self._destination_ip, self._destination_port)
         return self._rule_against_attackers_random_sip
 
     def empty_object(self):

@@ -12,6 +12,7 @@ class PacketDB:
         self._payload = []
         self._class_name_data = []
         self.icmp_packet_data = []
+        self._telnet_packet_data = []
         self._class_name = []
 
     def get_sorted_syn_source_ip_list(self):
@@ -113,6 +114,51 @@ class PacketDB:
             count += 1
         return self.icmp_packet_data
 
+    def get_sorted_telnet_source_ip_list(self):
+        del self._telnet_packet_data[:]
+        for item in self._source_ip:
+            if item in self._telnet_packet_data:
+                pass
+            else:
+                self._telnet_packet_data.append(item)
+        return self._telnet_packet_data
+
+    def get_sorted_telnet_destination_ip_list(self):
+        del self._telnet_packet_data[:]
+        for item in self._destination_ip:
+            if item in self._telnet_packet_data:
+                pass
+            else:
+                self._telnet_packet_data.append(item)
+        return self._telnet_packet_data
+
+    def get_telnet_source_ip(self):
+        count = 0
+        del self._telnet_packet_data[:]
+        for item in self._source_port:
+            if int(item) is 23:
+                self._telnet_packet_data.append(self._source_ip[count])
+            count += 1
+        return self._telnet_packet_data
+
+    def get_telnet_destination_ip(self):
+        count = 0
+        del self._telnet_packet_data[:]
+        for item in self._source_port:
+            if int(item) is 23:
+                self._telnet_packet_data.append(self._destination_ip[count])
+            count += 1
+        return self._telnet_packet_data
+
+    def get_telnet_timestamp(self):
+        count = 0
+        del self._telnet_packet_data[:]
+        for item in self._source_port:
+            if int(item) is 23:
+                self._telnet_packet_data.append(self._timestamp[count])
+            count += 1
+        return self._telnet_packet_data
+
     def set_packet_id(self, packet_id):
         self._packet_id.append(packet_id)
 
@@ -193,4 +239,5 @@ class PacketDB:
         self._payload = []
         self._class_name_data = []
         self.icmp_packet_data = []
+        self._telnet_packet_data = []
         self._class_name = []

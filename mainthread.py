@@ -6,11 +6,13 @@ from subprocess import call
 from PacketDB import PacketDB
 from PingSweep import PingSweep
 from SynFlood import SynFlood
+from BruteForce import BruteForce
 
 db = MySQLdb.connect(host="localhost", user="snort", passwd="123456", db="snort")
 current_alert_db = PacketDB()
 icmp_packet_db = PacketDB()
 syn_packet_db = PacketDB()
+telnet_packet_db = PacketDB()
 
 
 class MainThread(threading.Thread):
@@ -30,9 +32,11 @@ class MainThread(threading.Thread):
             self.mysql_database_retrieval()
             self.create_icmp_packet_db()
             self.create_syn_packet_db()
+            self.create_telnet_packet_db()
             self.check_for_pingsweep_attacks()
             self.check_for_syn_flood_attacks()
             self.check_for_syn_flood_attacks_with_random_sip()
+            self.check_brute_force_attacks()
             self.restart_snort(self.flag_file_accessed)
             self.clean_up()
             self.flag_stop_thread = True
@@ -162,6 +166,30 @@ class MainThread(threading.Thread):
                 self.write_rules_to_file(ping_sweep_db.get_snort_rule_string())
             ping_sweep_db.empty_object()
 
+    def create_telnet_packet_db(self):
+        for sip in current_alert_db.get_telnet_source_ip():
+            telnet_packet_db.set_source_ip(sip)
+        for dip in current_alert_db.get_telnet_destination_ip():
+            telnet_packet_db.set_destination_ip(dip)
+        for tp in current_alert_db.get_telnet_timestamp():
+            telnet_packet_db.set_timestamp(str(tp))
+
+    def check_brute_force_attacks(self):
+        brute_force_db = BruteForce()
+        # go through every possible source ip address
+        for sip_item in syn_packet_db.get_sorted_syn_source_ip_list():
+            for dip_item in telnet_packet_db.get_sorted_telnet_destination_ip_list():
+                brute_force_db.set_source_ip(sip_item)
+                brute_force_db.set_destination_ip(dip_item)
+                # if icmp packet has source ip address add its destination and timestamp
+                for packet in range(0, telnet_packet_db.get_source_ip_length()):
+                    if sip_item in telnet_packet_db.get_source_ip(packet):
+                        if dip_item in telnet_packet_db.get_destination_ip(packet):
+                            brute_force_db.set_timestamp(telnet_packet_db.get_timestamp(packet))
+                if brute_force_db.check_all_timestamps() is True:
+                    self.write_rules_to_file(brute_force_db.get_snort_rule_string())
+                brute_force_db.empty_object()
+
     def write_rules_to_file(self, string_rule):
         # change the group and user permission for the file to local user. chown gateway:gateway (file)
         rule_file = open("/etc/snort/trender/local.rules.old", "r")
@@ -185,6 +213,7 @@ class MainThread(threading.Thread):
         current_alert_db.empty_database()
         icmp_packet_db.empty_database()
         syn_packet_db.empty_database()
+        telnet_packet_db.empty_database()
 
     # same as killing the thread, give the thread a timeout
     def join(self, timeout=None):

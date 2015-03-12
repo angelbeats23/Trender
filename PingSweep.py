@@ -31,7 +31,9 @@ class PingSweep:
         return self._timestamp[timestamp_location_num]
 
     def get_snort_rule_string(self):
-        self._rules_against_attackers = "drop icmp {} any -> any icmp (msg:\"PingSweep Reconnaissance Attack\"; classtype:successful-recon-largescale; sid:1000003; rev:1;)\n".format(self._source_ip)
+        self._rules_against_attackers = "drop icmp {} any -> any icmp (msg:\"PingSweep Reconnaissance Attack\"; " \
+                                        "classtype:successful-recon-largescale; " \
+                                        "sid:1000003; rev:1;)\n".format(self._source_ip)
         return self._rules_against_attackers
 
     def check_all_timestamps(self):
