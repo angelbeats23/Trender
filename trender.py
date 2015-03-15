@@ -1,12 +1,12 @@
-from mainthread import MainThread
+from controller import Controller
 import sys
 import signal
 
 # create the thread object
-m_thread = MainThread()
+controller = Controller()
 
 # spawn a new thread
-m_thread.start()
+controller.start()
 
 
 def main():
@@ -14,13 +14,13 @@ def main():
         cmd = raw_input("> ")
         if cmd == "status":
             # you can add extra functions to thread to do what you need
-            m_thread.status()
+            controller.status()
         else:
             print"unknown command"
 
 
 def signal_handler(signal, frame):
-        flag = m_thread.get_flag()
+        flag = controller.get_flag()
         while not flag:
             pass
         print '\nExit Program Safely'
