@@ -2,8 +2,6 @@
 class PacketDB:
 
     def __init__(self):
-        self._packet_id = []
-        self._alert_name = []
         self._source_ip = []
         self._source_port = []
         self._destination_ip = []
@@ -14,6 +12,14 @@ class PacketDB:
         self.icmp_packet_data = []
         self._telnet_packet_data = []
         self._class_name = []
+
+        self._source_ip_list = []
+        self._source_port_list = []
+        self._destination_ip_list = []
+        self._destination_port_list = []
+        self._timestamp_list = []
+        self._payload_list = []
+        self._class_name_list = []
 
     def get_sorted_syn_source_ip_list(self):
         del self._class_name_data[:]
@@ -114,6 +120,45 @@ class PacketDB:
             count += 1
         return self.icmp_packet_data
 
+    def parameter_alias(self, parameter_description):
+        temp_list = []
+        if parameter_description in 's_ip':
+            temp_list = self._source_ip_list
+        elif parameter_description in 's_port':
+            temp_list = self._source_port_list
+        elif parameter_description in 'dst_ip':
+            temp_list = self._destination_ip_list
+        elif parameter_description in 'dst_port':
+            temp_list = self._destination_port_list
+        elif parameter_description in 'timestamp':
+            temp_list = self._timestamp_list = []
+        elif parameter_description in 'payload':
+            temp_list = self._payload_list = []
+        elif parameter_description in 'cl_name':
+            temp_list = self._class_name_list = []
+        return temp_list
+
+    def get_unique_parameter_list(self, packet_param):
+        temp_list = self.parameter_alias(packet_param)
+        unique_packet_db = []
+        for item in temp_list:
+            if item in unique_packet_db:
+                pass
+            else:
+                unique_packet_db.append(item)
+        return unique_packet_db
+
+    def get_protocol_lists(self, search_param, required_item, packet_param):
+        search_list = self.parameter_alias(search_param)
+        unique_packet_list = []
+        packet_list = self.parameter_alias(packet_param)
+        count = 0
+        for item in search_list:
+            if item is required_item:
+                unique_packet_list.append(packet_list[count])
+            count += 1
+        return unique_packet_list
+
     def get_sorted_telnet_source_ip_list(self):
         del self._telnet_packet_data[:]
         for item in self._source_ip:
@@ -136,8 +181,9 @@ class PacketDB:
         count = 0
         del self._telnet_packet_data[:]
         for item in self._source_port:
-            if int(item) is 23:
-                self._telnet_packet_data.append(self._source_ip[count])
+            if item is not None:
+                if int(item) is 23:
+                    self._telnet_packet_data.append(self._source_ip[count])
             count += 1
         return self._telnet_packet_data
 
@@ -145,8 +191,9 @@ class PacketDB:
         count = 0
         del self._telnet_packet_data[:]
         for item in self._source_port:
-            if int(item) is 23:
-                self._telnet_packet_data.append(self._destination_ip[count])
+            if item is not None:
+                if int(item) is 23:
+                    self._telnet_packet_data.append(self._destination_ip[count])
             count += 1
         return self._telnet_packet_data
 
@@ -154,22 +201,11 @@ class PacketDB:
         count = 0
         del self._telnet_packet_data[:]
         for item in self._source_port:
-            if int(item) is 23:
-                self._telnet_packet_data.append(self._timestamp[count])
+            if item is not None:
+                if int(item) is 23:
+                    self._telnet_packet_data.append(self._timestamp[count])
             count += 1
         return self._telnet_packet_data
-
-    def set_packet_id(self, packet_id):
-        self._packet_id.append(packet_id)
-
-    def get_packet_id(self, packet_id_location_num):
-        return self._packet_id[packet_id_location_num]
-
-    def set_alert_name(self, alert_name):
-        self._alert_name.append(alert_name)
-
-    def get_alert_name(self, alert_name_location_num):
-        return self._alert_name[alert_name_location_num]
 
     def set_source_ip(self, source_ip):
         self._source_ip.append(source_ip)
@@ -181,10 +217,13 @@ class PacketDB:
         return len(self._source_ip)
 
     def set_source_port(self, source_port):
-        self._packet_id.append(source_port)
+        self._source_port.append(source_port)
 
     def get_source_port(self, source_port_location_num):
         return self._source_port[source_port_location_num]
+
+    def get_source_port_length(self):
+        return len(self._source_port)
 
     def set_destination_ip(self, destination_ip):
         self._destination_ip.append(destination_ip)
@@ -227,17 +266,3 @@ class PacketDB:
 
     def get_class_name_length(self):
         return len(self._class_name)
-
-    def empty_database(self):
-        self._packet_id = []
-        self._alert_name = []
-        self._source_ip = []
-        self._source_port = []
-        self._destination_ip = []
-        self._destination_port = []
-        self._timestamp = []
-        self._payload = []
-        self._class_name_data = []
-        self.icmp_packet_data = []
-        self._telnet_packet_data = []
-        self._class_name = []
