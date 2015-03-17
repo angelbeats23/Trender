@@ -266,3 +266,23 @@ class PacketDB:
 
     def get_class_name_length(self):
         return len(self._class_name)
+
+    def empty_db(self):
+        self._source_ip = []
+        self._source_port = []
+        self._destination_ip = []
+        self._destination_port = []
+        self._timestamp = []
+        self._payload = []
+        self._class_name_data = []
+        self.icmp_packet_data = []
+        self._telnet_packet_data = []
+        self._class_name = []
+
+        self._source_ip_list = []
+        self._source_port_list = []
+        self._destination_ip_list = []
+        self._destination_port_list = []
+        self._timestamp_list = []
+        self._payload_list = []
+        self._class_name_list = []

@@ -37,7 +37,7 @@ class Threat(object):
                     temp_timestamp1 = datetime.strptime(self._timestamp_list[count+1], self.t_format)
                     if (temp_timestamp1 - temp_timestamp) < timedelta(seconds=compare_threat_timestamps):
                         timestamp_counter += 1
-                        if timestamp_counter > min_threat_limit:
+                        if timestamp_counter >= min_threat_limit:
                             self._attack_identified = True
         return self._attack_identified
 
@@ -210,7 +210,7 @@ class BruteForce(Threat):
                      "(msg:\"Telnet BruteForce Permission Denied\"; " \
                      "flow:to_server,established; metadata:ruleset community, service telnet; " \
                      "classtype:suspicious-login; sid:1000006; " \
-                     "rev:1;)".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port)
+                     "rev:1;)".format(self._destination_ip, self._source_port, self._source_ip, self._destination_port)
         self._rule_against_attackers = snort_rule
 
 

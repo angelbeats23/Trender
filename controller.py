@@ -38,6 +38,7 @@ class Controller(threading.Thread):
             self.check_for_syn_flood_attacks_with_random_sip()
             self.check_brute_force_attacks()
             self.restart_snort(self.flag_file_accessed)
+            del current_alert_db
             self.flag_stop_thread = True
             time.sleep(10)
 
@@ -53,6 +54,7 @@ class Controller(threading.Thread):
     def restart_snort(self, file_accessed):
         if file_accessed is True:
             call(self.snort_cmd, shell=True)
+            self.flag_file_accessed = False
 
     def mysql_database_retrieval(self):
         try:
@@ -176,10 +178,10 @@ class Controller(threading.Thread):
             telnet_packet_db.set_timestamp(str(tp))
 
     def check_brute_force_attacks(self):
-        brute_force_db = BruteForce()
         # go through every possible source ip address
-        for sip_item in syn_packet_db.get_sorted_syn_source_ip_list():
+        for sip_item in telnet_packet_db.get_sorted_telnet_source_ip_list():
             for dip_item in telnet_packet_db.get_sorted_telnet_destination_ip_list():
+                brute_force_db = BruteForce()
                 brute_force_db.set_source_ip(sip_item)
                 brute_force_db.set_destination_ip(dip_item)
                 # if icmp packet has source ip address add its destination and timestamp
@@ -187,6 +189,7 @@ class Controller(threading.Thread):
                     if sip_item in telnet_packet_db.get_source_ip(packet):
                         if dip_item in telnet_packet_db.get_destination_ip(packet):
                             brute_force_db.set_timestamp_list(telnet_packet_db.get_timestamp(packet))
+                # TODO problem is inside of the next object function. possibly to do with time ( new -> old time)
                 if brute_force_db.check_all_timestamps(20, 40, 10) is True:
                     brute_force_db.set_snort_rule_string()
                     self.write_rules_to_file(brute_force_db.get_snort_rule_string())
