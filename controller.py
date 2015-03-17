@@ -38,7 +38,7 @@ class Controller(threading.Thread):
             self.check_for_syn_flood_attacks_with_random_sip()
             self.check_brute_force_attacks()
             self.restart_snort(self.flag_file_accessed)
-            del current_alert_db
+            current_alert_db.empty_db()
             self.flag_stop_thread = True
             time.sleep(10)
 
