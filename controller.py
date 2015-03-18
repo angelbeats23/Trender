@@ -2,11 +2,9 @@ import threading
 import MySQLdb
 import sys
 import time
+import urllib, urllib2, cookielib
 from subprocess import call
 from PacketDB import PacketDB
-# from PingSweep import PingSweep
-# from SynFlood import SynFlood
-# from BruteForce import BruteForce
 from Threats import *
 
 db = MySQLdb.connect(host="localhost", user="snort", passwd="123456", db="snort")
@@ -29,16 +27,17 @@ class Controller(threading.Thread):
         while not self._stop_flag.is_set():
             # business
             self.flag_stop_thread = False
+            self.update_ip_cache()
             self.mysql_database_retrieval()
             self.create_icmp_packet_db()
             self.create_syn_packet_db()
             self.create_telnet_packet_db()
             self.check_for_pingsweep_attacks()
             self.check_for_syn_flood_attacks()
-            self.check_for_syn_flood_attacks_with_random_sip()
+            # self.check_for_syn_flood_attacks_with_random_sip()
             self.check_brute_force_attacks()
             self.restart_snort(self.flag_file_accessed)
-            current_alert_db.empty_db()
+            self.clean()
             self.flag_stop_thread = True
             time.sleep(10)
 
@@ -189,7 +188,6 @@ class Controller(threading.Thread):
                     if sip_item in telnet_packet_db.get_source_ip(packet):
                         if dip_item in telnet_packet_db.get_destination_ip(packet):
                             brute_force_db.set_timestamp_list(telnet_packet_db.get_timestamp(packet))
-                # TODO problem is inside of the next object function. possibly to do with time ( new -> old time)
                 if brute_force_db.check_all_timestamps(20, 40, 10) is True:
                     brute_force_db.set_snort_rule_string()
                     self.write_rules_to_file(brute_force_db.get_snort_rule_string())
@@ -210,6 +208,29 @@ class Controller(threading.Thread):
             rule_file.writelines(snort_rule_file_list)
             rule_file.close()
             print 'string add to file', string_rule
+
+    def update_ip_cache(self):
+        #cookie storage
+        cj = cookielib.CookieJar()
+        #create an opener
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        opener.addheaders.append(('User-agent', 'Mozilla/4.0'))
+        opener.addheaders.append(('Referer', 'http://localhost/base/index.php'))
+        login_data = urllib.urlencode({'login' : 'snort', 'password' : '123456', 'submit' : 'submit'})
+        resp = opener.open('http://localhost/base/index.php', login_data)
+        login_data = urllib.urlencode({'submit' : 'Rebuild IP Cache'})
+        resp2 = opener.open('http://localhost/base/base_maintenance.php', login_data)
+        login_data = urllib.urlencode({'submit' : 'Update IP Cache'})
+        resp3 = opener.open('http://localhost/base/base_maintenance.php', login_data)
+        resp.close()
+        resp2.close()
+        resp3.close()
+
+    def clean(self):
+        current_alert_db.empty_db()
+        icmp_packet_db.empty_db()
+        syn_packet_db.empty_db()
+        telnet_packet_db.empty_db()
 
     # same as killing the thread, give the thread a timeout
     def join(self, timeout=None):
