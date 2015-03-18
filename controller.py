@@ -2,7 +2,9 @@ import threading
 import MySQLdb
 import sys
 import time
-import urllib, urllib2, cookielib
+import urllib
+import urllib2
+import cookielib
 from subprocess import call
 from PacketDB import PacketDB
 from Threats import *
@@ -34,7 +36,6 @@ class Controller(threading.Thread):
             self.create_telnet_packet_db()
             self.check_for_pingsweep_attacks()
             self.check_for_syn_flood_attacks()
-            # self.check_for_syn_flood_attacks_with_random_sip()
             self.check_brute_force_attacks()
             self.restart_snort(self.flag_file_accessed)
             self.clean()
@@ -99,8 +100,8 @@ class Controller(threading.Thread):
             syn_packet_db.set_source_ip(sip)
         for dip in current_alert_db.get_syn_flood_destination_ip():
             syn_packet_db.set_destination_ip(dip)
-        for d_port in current_alert_db.get_syn_flood_destination_port():
-            syn_packet_db.set_destination_port(d_port)
+        # for d_port in current_alert_db.get_syn_flood_destination_port():
+        #     syn_packet_db.set_destination_port(d_port)
         for tp in current_alert_db.get_syn_flood_timestamp():
             syn_packet_db.set_timestamp(str(tp))
 
@@ -108,42 +109,18 @@ class Controller(threading.Thread):
         # identifies every packet that matches every possible packet from the unsorted syn_packet_db
         for sip_item in syn_packet_db.get_sorted_syn_source_ip_list():
             for dip_item in syn_packet_db.get_sorted_syn_destination_ip_list():
-                for dport_item in syn_packet_db.get_sorted_syn_destination_port_list():
-                    # for sip_item, dip_item, dport_item in zip(syn_packet_db.get_sorted_syn_source_ip_list(), \
-                    # syn_packet_db.get_sorted_syn_destination_ip_list(), \
-                    # syn_packet_db.get_sorted_syn_destination_port_list()):
-                    syn_flood_db = SynFlood()
-                    syn_flood_db.set_source_ip(sip_item)
-                    syn_flood_db.set_destination_ip(dip_item)
-                    syn_flood_db.set_destination_port(dport_item)
-                    # searches for every packets timestamp that matches all previous criteria
-                    for packet in range(0, syn_packet_db.get_timestamp_length()):
-                        if sip_item in syn_packet_db.get_source_ip(packet):
-                            if dip_item in syn_packet_db.get_destination_ip(packet):
-                                if int(dport_item) is int(syn_packet_db.get_destination_port(packet)):
-                                    syn_flood_db.set_timestamp_list(syn_packet_db.get_timestamp(packet))
-                    if syn_flood_db.check_all_timestamps(20, 2, 10) is True:
-                        syn_flood_db.set_snort_rule_string()
-                        self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
-                    del syn_flood_db
-
-    def check_for_syn_flood_attacks_with_random_sip(self):
-        # identifies every packet that matches every possible packet from the unsorted syn_packet_db
-        for dip_item in syn_packet_db.get_sorted_syn_destination_ip_list():
-            for dport_item in syn_packet_db.get_sorted_syn_destination_port_list():
-                syn_flood_db2 = SynFlood()
-                syn_flood_db2.set_destination_ip(dip_item)
-                syn_flood_db2.set_destination_port(dport_item)
+                syn_flood_db = SynFlood()
+                syn_flood_db.set_source_ip(sip_item)
+                syn_flood_db.set_destination_ip(dip_item)
                 # searches for every packets timestamp that matches all previous criteria
                 for packet in range(0, syn_packet_db.get_timestamp_length()):
+                    if sip_item in syn_packet_db.get_source_ip(packet):
                         if dip_item in syn_packet_db.get_destination_ip(packet):
-                            if int(dport_item) is int(syn_packet_db.get_destination_port(packet)):
-                                syn_flood_db2.set_source_ip_list(syn_packet_db.get_source_ip(packet))
-                                syn_flood_db2.set_timestamp_list(syn_packet_db.get_timestamp(packet))
-                if syn_flood_db2.verified_parameters_timestamps('s_ip', 20, 2, 10) is True:
-                    syn_flood_db2.set_snort_rule_string()
-                    self.write_rules_to_file(syn_flood_db2.get_snort_rule_string())
-                del syn_flood_db2
+                            syn_flood_db.set_timestamp_list(syn_packet_db.get_timestamp(packet))
+                if syn_flood_db.check_all_timestamps(1224, 2, 20) is True:
+                    syn_flood_db.set_snort_rule_string()
+                    self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
+                del syn_flood_db
 
     def create_icmp_packet_db(self):
         for sip in current_alert_db.get_icmp_source_ip():
@@ -163,7 +140,7 @@ class Controller(threading.Thread):
                 if sip_item in icmp_packet_db.get_source_ip(packet):
                     ping_sweep_db.set_destination_ip_list(icmp_packet_db.get_destination_ip(packet))
                     ping_sweep_db.set_timestamp_list(icmp_packet_db.get_timestamp(packet))
-            if ping_sweep_db.verified_parameters_timestamps('dst_ip', 10, 30, 1) is True:
+            if ping_sweep_db.verified_parameters_timestamps('dst_ip', 5000, 30, 4) is True:
                 ping_sweep_db.set_snort_rule_string()
                 self.write_rules_to_file(ping_sweep_db.get_snort_rule_string())
             del ping_sweep_db
@@ -180,6 +157,7 @@ class Controller(threading.Thread):
         # go through every possible source ip address
         for sip_item in telnet_packet_db.get_sorted_telnet_source_ip_list():
             for dip_item in telnet_packet_db.get_sorted_telnet_destination_ip_list():
+                telnet_packet_db.get_sorted_telnet_source_ip_list()
                 brute_force_db = BruteForce()
                 brute_force_db.set_source_ip(sip_item)
                 brute_force_db.set_destination_ip(dip_item)
@@ -188,7 +166,7 @@ class Controller(threading.Thread):
                     if sip_item in telnet_packet_db.get_source_ip(packet):
                         if dip_item in telnet_packet_db.get_destination_ip(packet):
                             brute_force_db.set_timestamp_list(telnet_packet_db.get_timestamp(packet))
-                if brute_force_db.check_all_timestamps(20, 40, 10) is True:
+                if brute_force_db.check_all_timestamps(12000, 40, 10) is True:
                     brute_force_db.set_snort_rule_string()
                     self.write_rules_to_file(brute_force_db.get_snort_rule_string())
                 del brute_force_db

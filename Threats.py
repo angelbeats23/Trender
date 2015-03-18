@@ -229,7 +229,7 @@ class PingSweep(Threat):
 class SynFlood(Threat):
 
     def __init__(self):
-        super(SynFlood, self).__init__()
+        super(SynFlood, self).__init__(dst_port='80')
 
     def set_snort_rule_string(self):
         snort_rule = "drop tcp {} {} -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; " \
