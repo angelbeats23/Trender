@@ -164,6 +164,7 @@ cd libdnet-1.12/
 ./configure
 make
 sudo checkinstall
+# press "enter" through all the command dialogues
 sudo dpkg -i libdnet_1.12-1_amd64.deb
 
 # changes to the home directory
