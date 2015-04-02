@@ -1,3 +1,4 @@
+#!/usr/bin/python2.7
 from controller import Controller
 import sys
 import signal
