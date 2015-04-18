@@ -264,6 +264,7 @@ sudo apt-get install php5-gd -y;
 sudo pear config-set preferred_state alpha
 sudo pear channel-update pear.php.net
 sudo pear install --alldeps Image_Color Image_Canvas Image_Graph
+sudo apt-get install python-mysqldb
 
 # BASE Install
 cd /usr/src
