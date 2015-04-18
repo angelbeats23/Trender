@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Setup needed for gateway in Virtual Box
-# two network interfaces (eth0: one connected to the internet or public LAN) other (eth1: connected to private or internal LAN)
+# two network interfaces
+# eth0: one connected to the internet or public WAN
+# eth1: connected to private or internal LAN
 # on the internet interface configure it to "Allow All" promiscuous Mode
 # 40GB hard drive is required
 # 2GB Memory is required
