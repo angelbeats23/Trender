@@ -15,7 +15,7 @@
 
 
 # updates Ubuntu 14.04.1 LTS Server 64bit
-sudo apt-get update -y ; sudo apt-get upgrade -y;
+#sudo apt-get update -y ; sudo apt-get upgrade -y;
 
 # Setup connection sharing between interfaces in Ubuntu
 
@@ -25,15 +25,13 @@ sudo ip addr add 10.0.0.1/24 dev eth1
 sudo sh -c " echo auto eth1 >> /etc/network/interfaces"
 sudo sh -c " echo iface eth1 inet static >> /etc/network/interfaces"
 sudo sh -c " echo address 10.0.0.1 >> /etc/network/interfaces"
+sudo sh -c " echo network 10.0.0.0 >> /etc/network/interfaces"
 sudo sh -c " echo netmask 255.255.255.0 >> /etc/network/interfaces"
-sudo sh -c " echo broadcast 0.0.0.0 >> /etc/network/interfaces"
-
+sudo sh -c " echo broadcast 10.0.0.255 >> /etc/network/interfaces"
 
 #configure iptables NAT translation to allow traffic through Ubuntu server
-sudo iptables -A FORWARD -o eth0 -i eth1 -s 10.0.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
-sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -t nat -F POSTROUTING
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+sudo iptables -t nat -A PREROUTING -j NFQUEUE --queue-num 2
 
 # save iptables
 sudo iptables-save | sudo tee /etc/iptables.sav
@@ -55,19 +53,52 @@ sudo apt-get install libpcap-dev -y;
 sudo apt-get install bison -y;
 sudo apt-get install flex -y;
 sudo apt-get install gcc -y;
-sudo apt-get install snort -y;
-# [enter LAN subnet e.g. 10.0.0.0/24]
+sudo apt-get install libpcre3-dev -y;
+sudo apt-get install iptables-dev -y;
+sudo apt-get install zlib1g-dev -y;
+# Barnyard2 dependencies
+sudo apt-get install autoconf -y;
+sudo apt-get install libtool -y;
+sudo apt-get install checkinstall -y;
+sudo apt-get install build-essential -y;
+sudo apt-get install libmysqld-dev -y;
+sudo apt-get install git -y;
+
+sudo apt-get install libnet1-dev libnetfilter-queue-dev libnfnetlink-dev libnfnetlink0 libmnl-dev -y;
+
+# install barnyard2 dependency libdnet
+sudo wget http://libdnet.googlecode.com/files/libdnet-1.12.tgz
+sudo tar zxvf libdnet-1.12.tgz
+cd libdnet-1.12/
+./configure "CFLAGS=-fPIC -g -O2"
+make
+sudo checkinstall
+# press "enter" through all the command dialogues
+sudo dpkg -i libdnet_1.12-1_amd64.deb
 
 # changes to the home directory
 cd
+
 
 sudo wget https://www.snort.org/downloads/snort/daq-2.0.4.tar.gz
 sudo tar xvfz daq-2.0.4.tar.gz
 cd daq-2.0.4/
-./configure; make; sudo make install
+./configure --disable-ipq-module --libdir=/usr/lib --includedir=/usr/include ; make; sudo make install
 
 # changes to the home directory
 cd
+
+sudo apt-get install snort -y;
+# [enter LAN subnet e.g. 10.0.0.0/24]
+
+# additions here.
+
+sudo sed -i ' s/# additions here./drop icmp any any <> any any \(msg:\"ICMP PACKET TEST\"; classtype:not-suspicious; sid:100002; rev:1;\)/g' /etc/snort/rules/local.rules
+
+sudo sed -i " s/# config daq: <type>/config daq: nfq/g" /etc/snort/snort.conf
+sudo sed -i " s/# config daq_dir: <dir>/config daq_dir: \/usr\/lib\/daq/g" /etc/snort/snort.conf
+sudo sed -i " s/# config daq_mode: <mode>/config daq_mode: inline/g" /etc/snort/snort.conf
+sudo sed -i " s/# config daq_var: <var>/config daq_var: queue=2/g" /etc/snort/snort.conf
 
 # configure snort to create output log files (in binary) that barnyard can read
 sudo sed -i ' s/output unified2: filename snort.log, limit 128, nostamp, mpls_event_types, vlan_event_types/output unified2: filename snort.log, limit 128, mpls_event_types, vlan_event_types/g' /etc/snort/snort.conf
@@ -81,58 +112,52 @@ sudo sed -i 's/include \$RULE_PATH\/attack-responses.rules/#include \$RULE_PATH\
 sudo sed -i 's/include \$RULE_PATH\/backdoor.rules/#include \$RULE_PATH\/backdoor.rules/g' /etc/snort/snort.conf
 sudo sed -i 's/include \$RULE_PATH\/bad-traffic.rules/#include \$RULE_PATH\/bad-traffic.rules/g' /etc/snort/snort.conf
 sudo sed -i 's/include \$RULE_PATH\/chat.rules/#include \$RULE_PATH\/chat.rules/g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/ddos.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/dns.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/dos.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/experimental.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/exploit.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/finger.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/ftp.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/icmp-info.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/icmp.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/imap.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/info.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/misc.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/multimedia.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/mysql.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/netbios.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/nntp.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/oracle.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/other-ids.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/p2p.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/policy.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/pop2.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/pop3.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/rpc.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/rservices.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/scan.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/smtp.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/snmp.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/sql.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/telnet.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/tftp.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/virus.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-attacks.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-cgi.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-client.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-coldfusion.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-frontpage.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-iis.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-misc.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/web-php.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/x11.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-sql-injection.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-client.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-dos.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-iis.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-misc.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-php.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-sql-injection.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-client.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-dos.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-iis.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-misc.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
-sudo sed -i 's/include \$RULE_PATH\/community-web-php.rules/#include \$RULE_PATH\//g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/ddos.rules/#include \$RULE_PATH\/ddos.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/dns.rules/#include \$RULE_PATH\/dns.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/dos.rules/#include \$RULE_PATH\/dos.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/experimental.rules/#include \$RULE_PATH\/experimental.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/exploit.rules/#include \$RULE_PATH\/exploit.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/finger.rules/#include \$RULE_PATH\/finger.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/ftp.rules/#include \$RULE_PATH\/ftp.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/icmp-info.rules/#include \$RULE_PATH\/icmp-info.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/icmp.rules/#include \$RULE_PATH\/icmp.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/imap.rules/#include \$RULE_PATH\/imap.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/info.rules/#include \$RULE_PATH\/info.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/misc.rules/#include \$RULE_PATH\/misc.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/multimedia.rules/#include \$RULE_PATH\/multimedia.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/mysql.rules/#include \$RULE_PATH\/mysql.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/netbios.rules/#include \$RULE_PATH\/netbios.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/nntp.rules/#include \$RULE_PATH\/nntp.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/oracle.rules/#include \$RULE_PATH\/oracle.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/other-ids.rules/#include \$RULE_PATH\/other-ids.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/p2p.rules/#include \$RULE_PATH\/p2p.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/policy.rules/#include \$RULE_PATH\/policy.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/pop2.rules/#include \$RULE_PATH\/pop2.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/pop3.rules/#include \$RULE_PATH\/pop3.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/rpc.rules/#include \$RULE_PATH\/rpc.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/rservices.rules/#include \$RULE_PATH\/rservices.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/scan.rules/#include \$RULE_PATH\/scan.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/smtp.rules/#include \$RULE_PATH\/smtp.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/snmp.rules/#include \$RULE_PATH\/snmp.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/sql.rules/#include \$RULE_PATH\/sql.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/telnet.rules/#include \$RULE_PATH\/telnet.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/tftp.rules/#include \$RULE_PATH\/tftp.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/virus.rules/#include \$RULE_PATH\/virus.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-attacks.rules/#include \$RULE_PATH\/web-attacks.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-cgi.rules/#include \$RULE_PATH\/web-cgi.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-client.rules/#include \$RULE_PATH\/web-client.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-coldfusion.rules/#include \$RULE_PATH\/web-coldfusion.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-frontpage.rules/#include \$RULE_PATH\/web-frontpage.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-iis.rules/#include \$RULE_PATH\/web-iis.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-misc.rules/#include \$RULE_PATH\/web-misc.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/web-php.rules/#include \$RULE_PATH\/web-php.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/x11.rules/#include \$RULE_PATH\/x11.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/community-sql-injection.rules/#include \$RULE_PATH\/community-sql-injection.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/community-web-client.rules/#include \$RULE_PATH\/community-web-client.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/community-web-dos.rules/#include \$RULE_PATH\/community-web-dos.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/community-web-iis.rules/#include \$RULE_PATH\/community-web-iis.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/community-web-misc.rules/#include \$RULE_PATH\/community-web-misc.rules/g' /etc/snort/snort.conf
+sudo sed -i 's/include \$RULE_PATH\/community-web-php.rules/#include \$RULE_PATH\/community-web-php.rules/g' /etc/snort/snort.conf
 
 # remove snort log files
 sudo rm /var/log/snort/snort.log
@@ -144,28 +169,6 @@ sudo service snort restart
 sudo chown snort:snort /var/log/snort
 
 # Barnyard2
-
-# Barnyard2 dependencies
-sudo apt-get install autoconf -y;
-sudo apt-get install libtool -y;
-# sudo apt-get install libmysqlclient-dev
-sudo apt-get install checkinstall -y;
-sudo apt-get install build-essential -y;
-sudo apt-get install libmysqld-dev -y;
-sudo apt-get install git -y;
-
-# changes to the home directory
-cd
-
-# install barnyard2 dependency libdnet
-sudo wget https://libdnet.googlecode.com/files/libdnet-1.12.tgz
-sudo tar zxvf libdnet-1.12.tgz
-cd libdnet-1.12/
-./configure
-make
-sudo checkinstall
-# press "enter" through all the command dialogues
-sudo dpkg -i libdnet_1.12-1_amd64.deb
 
 # changes to the home directory
 cd
