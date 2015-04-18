@@ -206,7 +206,7 @@ class BruteForce(Threat):
         super(BruteForce, self).__init__(dst_port='23')
 
     def set_snort_rule_string(self):
-        snort_rule = "drop tcp {} {} -> {} {} " \
+        snort_rule = "reject tcp {} {} -> {} {} " \
                      "(msg:\"Telnet BruteForce Permission Denied\"; " \
                      "flow:to_server,established; metadata:ruleset community, service telnet; " \
                      "classtype:suspicious-login; sid:1000006; " \
@@ -220,7 +220,7 @@ class PingSweep(Threat):
         super(PingSweep, self).__init__(dst_port='icmp')
 
     def set_snort_rule_string(self):
-        snort_rule = "drop icmp {} {} -> {} {} (msg:\"PingSweep Reconnaissance Attack\"; " \
+        snort_rule = "reject icmp {} {} -> {} {} (msg:\"PingSweep Reconnaissance Attack\"; " \
                      "classtype:successful-recon-largescale; sid:1000003; " \
                      "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port)
         self._rule_against_attackers = snort_rule
@@ -232,7 +232,7 @@ class SynFlood(Threat):
         super(SynFlood, self).__init__(dst_port='80')
 
     def set_snort_rule_string(self):
-        snort_rule = "drop tcp {} {} -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; " \
+        snort_rule = "reject tcp {} {} -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; " \
                      "classtype:successful-dos; sid:1000004; " \
                      "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port)
         self._rule_against_attackers = snort_rule
