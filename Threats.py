@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import random
 
+
 class Threat(object):
 
     def __init__(self, s_ip='any', s_port='any', dst_ip='any', dst_port='any'):
