@@ -33,7 +33,7 @@ sudo sh -c " echo broadcast 10.0.0.255 >> /etc/network/interfaces"
 
 #configure iptables NAT translation to allow traffic through Ubuntu server
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-sudo iptables -t nat -A PREROUTING -j NFQUEUE --queue-num 2
+sudo iptables -A FORWARD -j NFQUEUE --queue-num 2
 
 # save iptables
 sudo iptables-save | sudo tee /etc/iptables.sav
@@ -95,6 +95,7 @@ sudo apt-get install snort -y;
 
 # additions here.
 
+# TODO add snort rules
 sudo sed -i ' s/# additions here./drop icmp any any <> any any \(msg:\"ICMP PACKET TEST\"; classtype:not-suspicious; sid:100002; rev:1;\)/g' /etc/snort/rules/local.rules
 
 sudo sed -i " s/# config daq: <type>/config daq: nfq/g" /etc/snort/snort.conf
