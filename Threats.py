@@ -214,14 +214,14 @@ class BruteForce(Threat):
                      "(msg:\"Telnet BruteForce Permission Denied\"; " \
                      "flow:to_server,established; metadata:ruleset community, service telnet; " \
                      "classtype:suspicious-login; sid:{}; " \
-                     "rev:1;)".format(self._destination_ip, self._source_port, self._source_ip, self._destination_port, Threat.get_randnum(self))
+                     "rev:1;)\n".format(self._destination_ip, self._source_port, self._source_ip, self._destination_port, Threat.get_randnum(self))
         self._rule_against_attackers = snort_rule
 
 
 class PingSweep(Threat):
 
     def __init__(self):
-        super(PingSweep, self).__init__(dst_port='icmp')
+        super(PingSweep, self).__init__(dst_port='any')
 
     def set_snort_rule_string(self):
         snort_rule = "reject icmp {} {} -> {} {} (msg:\"PingSweep Reconnaissance Attack\"; " \
