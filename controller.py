@@ -232,7 +232,7 @@ class Controller(threading.Thread):
         opener.addheaders.append(('Referer', 'http://localhost/base/index.php'))
         login_data = urllib.urlencode({'login' : self.base_user, 'password' : self.base_pass, 'submit' : 'submit'})
         resp = opener.open('http://localhost/base/index.php', login_data)
-        login_data = urllib.urlencode({'submit' : 'Rebuild IP Cache'})
+        login_data = urllib.urlencode({'submit' : 'Update Alert Cache'})
         resp2 = opener.open('http://localhost/base/base_maintenance.php', login_data)
         login_data = urllib.urlencode({'submit' : 'Update IP Cache'})
         resp3 = opener.open('http://localhost/base/base_maintenance.php', login_data)
