@@ -18,9 +18,6 @@ telnet_packet_db = PacketDB()
 config = ConfigParser.ConfigParser()
 config.read('tre_config.ini')
 
-db = MySQLdb.connect(host=config.get('mysqld', 'host'), user=config.get('mysqld', 'user'),
-                     passwd=config.get('mysqld', 'password'), db=config.get('mysqld', 'db'))
-
 
 class Controller(threading.Thread):
     def __init__(self):
@@ -85,42 +82,36 @@ class Controller(threading.Thread):
             self.flag_file_accessed = False
 
     def mysql_database_retrieval(self):
-        try:
-            cursor = db.cursor()
-            cursor.execute("USE snort; ")
-            cursor.execute("SELECT acid_ip_cache.ipc_fqdn FROM acid_event,acid_ip_cache WHERE "
-                           "acid_event.ip_src = acid_ip_cache.ipc_ip ORDER BY acid_event.timestamp; ")
-            for row in cursor.fetchall():
-                current_alert_db.set_source_ip(row[0])
-            cursor.execute("SELECT layer4_sport FROM acid_event ORDER BY acid_event.timestamp; ")
-            for row in cursor.fetchall():
-                current_alert_db.set_source_port(row[0])
-            cursor.execute("SELECT acid_ip_cache.ipc_fqdn FROM acid_event,acid_ip_cache WHERE "
-                           "acid_event.ip_dst = acid_ip_cache.ipc_ip ORDER BY acid_event.timestamp; ")
-            for row in cursor.fetchall():
-                current_alert_db.set_destination_ip(row[0])
-                # there is an issue with barnyard storing destination ip addresses in mysql
-                # primarily due to the fact that it only stores cached fqdn that have been
-                # queried. the only way to do this is by login into base and clicking on every
-                # packets destination ip address link which will make it perform a dns lookup.
-            cursor.execute("SELECT layer4_dport FROM acid_event ORDER BY acid_event.timestamp;")
-            for row in cursor.fetchall():
-                current_alert_db.set_destination_port(row[0])
-            cursor.execute("SELECT timestamp FROM acid_event ORDER BY acid_event.timestamp;")
-            for row in cursor.fetchall():
-                current_alert_db.set_timestamp(row[0])
-            cursor.execute("SELECT sig_class.sig_class_name FROM acid_event,sig_class WHERE "
-                           "acid_event.sig_class_id = sig_class.sig_class_id ORDER BY acid_event.timestamp;")
-            for row in cursor.fetchall():
-                current_alert_db.set_class_name(str(row[0]))
-
-        except MySQLdb.Error, e:
-            print "Error %d: %s" % (e.args[0], e.args[1])
-            sys.exit(1)
-
-        finally:
-            if cursor is not None:
-                cursor.close()
+        db = MySQLdb.connect(host=config.get('mysqld', 'host'), user=config.get('mysqld', 'user'),
+                     passwd=config.get('mysqld', 'password'), db=config.get('mysqld', 'db'))
+        cursor = db.cursor()
+        cursor.execute("USE snort; ")
+        cursor.execute("SELECT acid_ip_cache.ipc_fqdn FROM acid_event,acid_ip_cache WHERE "
+                       "acid_event.ip_src = acid_ip_cache.ipc_ip ORDER BY acid_event.timestamp; ")
+        for row in cursor.fetchall():
+            current_alert_db.set_source_ip(row[0])
+        cursor.execute("SELECT layer4_sport FROM acid_event ORDER BY acid_event.timestamp; ")
+        for row in cursor.fetchall():
+            current_alert_db.set_source_port(row[0])
+        cursor.execute("SELECT acid_ip_cache.ipc_fqdn FROM acid_event,acid_ip_cache WHERE "
+                       "acid_event.ip_dst = acid_ip_cache.ipc_ip ORDER BY acid_event.timestamp; ")
+        for row in cursor.fetchall():
+            current_alert_db.set_destination_ip(row[0])
+            # there is an issue with barnyard storing destination ip addresses in mysql
+            # primarily due to the fact that it only stores cached fqdn that have been
+            # queried. the only way to do this is by login into base and clicking on every
+            # packets destination ip address link which will make it perform a dns lookup.
+        cursor.execute("SELECT layer4_dport FROM acid_event ORDER BY acid_event.timestamp;")
+        for row in cursor.fetchall():
+            current_alert_db.set_destination_port(row[0])
+        cursor.execute("SELECT timestamp FROM acid_event ORDER BY acid_event.timestamp;")
+        for row in cursor.fetchall():
+            current_alert_db.set_timestamp(row[0])
+        cursor.execute("SELECT sig_class.sig_class_name FROM acid_event,sig_class WHERE "
+                       "acid_event.sig_class_id = sig_class.sig_class_id ORDER BY acid_event.timestamp;")
+        for row in cursor.fetchall():
+            current_alert_db.set_class_name(str(row[0]))
+        cursor.close()
 
     # identify all syn packets and store them in a object
     def create_syn_packet_db(self):
@@ -213,9 +204,7 @@ class Controller(threading.Thread):
         for rule in snort_rule_file_list:
             if split_str[0] in rule.split('";'):
                 rule_match = True
-        if rule_match is True:
-            print 'string already in file', string_rule
-        else:
+        if rule_match is False:
             self.flag_file_accessed = True
             rule_file = open(self.path, "w")
             snort_rule_file_list.append(string_rule)
