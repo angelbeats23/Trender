@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+import random
 
 class Threat(object):
 
@@ -199,6 +199,10 @@ class Threat(object):
     def get_class_name_list_length(self):
         return len(self._class_name_list)
 
+    # TODO Randomize the sid for the snort rule
+    def get_randnum(self):
+        return random.randint(1000, 999999)
+
 
 class BruteForce(Threat):
 
@@ -209,8 +213,8 @@ class BruteForce(Threat):
         snort_rule = "reject tcp {} {} -> {} {} " \
                      "(msg:\"Telnet BruteForce Permission Denied\"; " \
                      "flow:to_server,established; metadata:ruleset community, service telnet; " \
-                     "classtype:suspicious-login; sid:1000006; " \
-                     "rev:1;)".format(self._destination_ip, self._source_port, self._source_ip, self._destination_port)
+                     "classtype:suspicious-login; sid:{}; " \
+                     "rev:1;)".format(self._destination_ip, self._source_port, self._source_ip, self._destination_port, Threat.get_randnum(self))
         self._rule_against_attackers = snort_rule
 
 
@@ -221,8 +225,8 @@ class PingSweep(Threat):
 
     def set_snort_rule_string(self):
         snort_rule = "reject icmp {} {} -> {} {} (msg:\"PingSweep Reconnaissance Attack\"; " \
-                     "classtype:successful-recon-largescale; sid:1000003; " \
-                     "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port)
+                     "classtype:successful-recon-largescale; sid:{}; " \
+                     "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port, Threat.get_randnum(self))
         self._rule_against_attackers = snort_rule
 
 
@@ -232,8 +236,8 @@ class SynFlood(Threat):
         super(SynFlood, self).__init__(dst_port='80')
 
     def set_snort_rule_string(self):
-        snort_rule = "reject tcp {} {} -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless flags:S; " \
-                     "classtype:successful-dos; sid:1000004; " \
-                     "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port)
+        snort_rule = "reject tcp {} {} -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless; flags:S; " \
+                     "classtype:successful-dos; sid:{}; " \
+                     "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port, Threat.get_randnum(self))
         self._rule_against_attackers = snort_rule
 
