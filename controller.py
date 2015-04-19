@@ -210,7 +210,7 @@ class Controller(threading.Thread):
             snort_rule_file_list.append(string_rule)
             rule_file.writelines(snort_rule_file_list)
             rule_file.close()
-            print 'string add to file', string_rule
+            print 'Snort rule added = ', string_rule
 
     def update_ip_cache(self):
         # cookie storage
