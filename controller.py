@@ -27,7 +27,6 @@ class Controller(threading.Thread):
         self._stop_flag = threading.Event()
         self.flag_stop_thread = False
         self.flag_file_accessed = False
-        # TODO: will have to change this due to nfq, also add other snort startup command
         self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'snort', 'stop')
         self.snort_cmd2 = "%s %s %s %s %s %s %s %s %s %s" % ('sudo', 'snort', '-l', '/var/log/snort', '-c', '/etc/snort/snort.conf', '-D', '-Q', '-S', 'HOME_NET=[10.0.0.0/24]')
 
@@ -209,7 +208,12 @@ class Controller(threading.Thread):
         rule_file = open(self.path, "r")
         snort_rule_file_list = rule_file.readlines()
         rule_file.close()
-        if string_rule in snort_rule_file_list:
+        split_str = string_rule.split('";')
+        rule_match = False
+        for rule in snort_rule_file_list:
+            if split_str[0] in rule.split('";'):
+                rule_match = True
+        if rule_match is True:
             print 'string already in file', string_rule
         else:
             self.flag_file_accessed = True
