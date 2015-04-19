@@ -2,6 +2,7 @@ import threading
 import MySQLdb
 import sys
 import time
+import ConfigParser
 import urllib
 import urllib2
 import cookielib
@@ -9,11 +10,16 @@ from subprocess import call
 from PacketDB import PacketDB
 from Threats import *
 
-db = MySQLdb.connect(host="localhost", user="snort", passwd="123456", db="snort")
 current_alert_db = PacketDB()
 icmp_packet_db = PacketDB()
 syn_packet_db = PacketDB()
 telnet_packet_db = PacketDB()
+
+config = ConfigParser.ConfigParser()
+config.read('tre_config.ini')
+
+db = MySQLdb.connect(host=config.get('mysqld', 'host'), user=config.get('mysqld', 'user'),
+                     passwd=config.get('mysqld', 'password'), db=config.get('mysqld', 'db'))
 
 
 class Controller(threading.Thread):
@@ -21,7 +27,29 @@ class Controller(threading.Thread):
         self._stop_flag = threading.Event()
         self.flag_stop_thread = False
         self.flag_file_accessed = False
-        self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'snort', 'restart')
+        # TODO: will have to change this due to nfq, also add other snort startup command
+        self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'snort', 'stop')
+        self.snort_cmd2 = "%s %s %s %s %s %s %s %s %s %s" % ('sudo', 'snort', '-l', '/var/log/snort', '-c', '/etc/snort/snort.conf', '-D', '-Q', '-S', 'HOME_NET=[10.0.0.0/24]')
+
+        self.ps_dangerous_ip = config.get('pingsweep', 'attackers_ip')
+        self.ps_time_limit = config.getint('pingsweep', 'packet_time_limit')
+        self.ps_packets_time_limit = config.getint('pingsweep', 'packets_time_limit')
+        self.ps_packet_threshold = config.getint('pingsweep', 'packet_threshold')
+
+        self.bf_time_limit = config.getint('bruteforce', 'packet_time_limit')
+        self.bf_packets_time_limit = config.getint('bruteforce', 'packets_time_limit')
+        self.bf_packet_threshold = config.getint('bruteforce', 'packet_threshold')
+
+        self.dos_time_limit = config.getint('dos', 'packet_time_limit')
+        self.dos_packets_time_limit = config.getint('dos', 'packets_time_limit')
+        self.dos_packet_threshold = config.getint('dos', 'packet_threshold')
+
+        self.base_user = config.get('base', 'user')
+        self.base_pass = config.get('base', 'password')
+
+        self.delay = config.getint('default', 'delay')
+        self.path = config.get('default', 'rules_path')
+
         super(Controller, self).__init__()
 
     # while thread running
@@ -40,7 +68,7 @@ class Controller(threading.Thread):
             self.restart_snort(self.flag_file_accessed)
             self.clean()
             self.flag_stop_thread = True
-            time.sleep(10)
+            time.sleep(self.delay)
 
     def status(self):
         if not self._stop_flag.is_set():
@@ -54,6 +82,7 @@ class Controller(threading.Thread):
     def restart_snort(self, file_accessed):
         if file_accessed is True:
             call(self.snort_cmd, shell=True)
+            call(self.snort_cmd2, shell=True)
             self.flag_file_accessed = False
 
     def mysql_database_retrieval(self):
@@ -117,7 +146,8 @@ class Controller(threading.Thread):
                     if sip_item in syn_packet_db.get_source_ip(packet):
                         if dip_item in syn_packet_db.get_destination_ip(packet):
                             syn_flood_db.set_timestamp_list(syn_packet_db.get_timestamp(packet))
-                if syn_flood_db.check_all_timestamps(1224, 2, 20) is True:
+                if syn_flood_db.check_all_timestamps(self.dos_time_limit, self.dos_packets_time_limit,
+                                                     self.dos_packet_threshold) is True:
                     syn_flood_db.set_snort_rule_string()
                     self.write_rules_to_file(syn_flood_db.get_snort_rule_string())
                 del syn_flood_db
@@ -140,7 +170,8 @@ class Controller(threading.Thread):
                 if sip_item in icmp_packet_db.get_source_ip(packet):
                     ping_sweep_db.set_destination_ip_list(icmp_packet_db.get_destination_ip(packet))
                     ping_sweep_db.set_timestamp_list(icmp_packet_db.get_timestamp(packet))
-            if ping_sweep_db.verified_parameters_timestamps('dst_ip', 5000, 30, 4) is True:
+            if ping_sweep_db.verified_parameters_timestamps(self.ps_dangerous_ip, self.ps_time_limit,
+                                                            self.ps_packets_time_limit, self.ps_packet_threshold) is True:
                 ping_sweep_db.set_snort_rule_string()
                 self.write_rules_to_file(ping_sweep_db.get_snort_rule_string())
             del ping_sweep_db
@@ -166,7 +197,8 @@ class Controller(threading.Thread):
                     if sip_item in telnet_packet_db.get_source_ip(packet):
                         if dip_item in telnet_packet_db.get_destination_ip(packet):
                             brute_force_db.set_timestamp_list(telnet_packet_db.get_timestamp(packet))
-                if brute_force_db.check_all_timestamps(12000, 40, 10) is True:
+                if brute_force_db.check_all_timestamps(self.bf_time_limit, self.bf_packets_time_limit,
+                                                       self.bf_packet_threshold) is True:
                     brute_force_db.set_snort_rule_string()
                     self.write_rules_to_file(brute_force_db.get_snort_rule_string())
                 del brute_force_db
@@ -174,27 +206,27 @@ class Controller(threading.Thread):
     def write_rules_to_file(self, string_rule):
         snort_rule_file_list = []
         # change the group and user permission for the file to local user. chown gateway:gateway (file)
-        rule_file = open("/etc/snort/trender/local.rules.old", "r")
+        rule_file = open(self.path, "r")
         snort_rule_file_list = rule_file.readlines()
         rule_file.close()
         if string_rule in snort_rule_file_list:
             print 'string already in file', string_rule
         else:
             self.flag_file_accessed = True
-            rule_file = open("/etc/snort/trender/local.rules.old", "w")
+            rule_file = open(self.path, "w")
             snort_rule_file_list.append(string_rule)
             rule_file.writelines(snort_rule_file_list)
             rule_file.close()
             print 'string add to file', string_rule
 
     def update_ip_cache(self):
-        #cookie storage
+        # cookie storage
         cj = cookielib.CookieJar()
-        #create an opener
+        # create an opener
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
         opener.addheaders.append(('User-agent', 'Mozilla/4.0'))
         opener.addheaders.append(('Referer', 'http://localhost/base/index.php'))
-        login_data = urllib.urlencode({'login' : 'snort', 'password' : '123456', 'submit' : 'submit'})
+        login_data = urllib.urlencode({'login' : self.base_user, 'password' : self.base_pass, 'submit' : 'submit'})
         resp = opener.open('http://localhost/base/index.php', login_data)
         login_data = urllib.urlencode({'submit' : 'Rebuild IP Cache'})
         resp2 = opener.open('http://localhost/base/base_maintenance.php', login_data)
