@@ -94,9 +94,9 @@ sudo apt-get install snort -y;
 # [enter LAN subnet e.g. 10.0.0.0/24]
 
 # additions here.
-
-# TODO add snort rules
 sudo sed -i ' s/# additions here./alert icmp any any -> \$HOME_NET any (msg:\"ICMP PING\"\; classtype:not-suspicious\; sid:100002\; rev:1\;)\nalert tcp any any -> any 80 (msg:\"DDOS synflood Attempt\"\; flow:stateless\; flags:S\; classtype:attempted-dos\; sid:1000002; rev:2\;)\nalert tcp any 23 -> any any (msg:\"PROTOCOL-TELNET login failed\"\; flow:to_client,established\; content:\"Login incorrect\"\; nocase\; metadata:ruleset community, service telnet\; classtype:suspicious-login\; sid:492\; rev:15\;)/g' /etc/snort/rules/local.rules
+
+sudo sed -i " s/ipvar HOME_NET any/ipvar HOME_NET 10.0.0.0\/24/g" /etc/snort/snort.conf
 
 sudo sed -i " s/# config daq: <type>/config daq: nfq/g" /etc/snort/snort.conf
 sudo sed -i " s/# config daq_dir: <dir>/config daq_dir: \/usr\/lib\/daq/g" /etc/snort/snort.conf
@@ -110,7 +110,7 @@ sudo sed -i ' s/# output alert_unified2: filename snort.alert, limit 128, nostam
 sudo sed -i ' s/# output log_unified2: filename snort.log, limit 128, nostamp/output log_unified2: filename snort.log, limit 128, nostamp/g' /etc/snort/snort.conf
 sudo sed -i ' s/# output alert_syslog: LOG_AUTH LOG_ALERT/output alert_syslog: LOG_AUTH LOG_ALERT/g' /etc/snort/snort.conf
 
-# TODO locate all the rule files that need to be commented out
+# comment out all community snort rules
 sudo sed -i 's/include \$RULE_PATH\/attack-responses.rules/#include \$RULE_PATH\/attack-responses.rules/g' /etc/snort/snort.conf
 sudo sed -i 's/include \$RULE_PATH\/backdoor.rules/#include \$RULE_PATH\/backdoor.rules/g' /etc/snort/snort.conf
 sudo sed -i 's/include \$RULE_PATH\/bad-traffic.rules/#include \$RULE_PATH\/bad-traffic.rules/g' /etc/snort/snort.conf
@@ -166,7 +166,8 @@ sudo sed -i 's/include \$RULE_PATH\/community-web-php.rules/#include \$RULE_PATH
 sudo rm /var/log/snort/snort.log
 
 # restart snort
-sudo service snort restart
+sudo service snort stop
+sudo snort -l /var/log/snort -c /etc/snort/snort.conf -D -Q
 
 # change file permissions
 sudo chown snort:snort /var/log/snort
@@ -289,7 +290,8 @@ sudo service apache2 restart
 sudo sed -i 's/\$colored_alerts = 0\;/\$colored_alerts = 1\;/g' /var/www/html/base/base_conf.php
 
 # restart snort and barnyard2
-sudo service snort restart
+sudo service snort stop
+sudo snort -l /var/log/snort -c /etc/snort/snort.conf -D -Q
 sudo /etc/init.d/runbarnyard2 restart
 
 
