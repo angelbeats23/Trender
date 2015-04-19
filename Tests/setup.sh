@@ -96,7 +96,7 @@ sudo apt-get install snort -y;
 # additions here.
 
 # TODO add snort rules
-sudo sed -i ' s/# additions here./drop icmp any any <> any any \(msg:\"ICMP PACKET TEST\"; classtype:not-suspicious; sid:100002; rev:1;\)/g' /etc/snort/rules/local.rules
+sudo sed -i ' s/# additions here./alert icmp any any -> \$HOME_NET any (msg:\"ICMP PING\"\; classtype:not-suspicious\; sid:100002\; rev:1\;)\nalert tcp any any -> any 80 (msg:\"DDOS synflood Attempt\"\; flow:stateless\; flags:S\; classtype:attempted-dos\; sid:1000002; rev:2\;)\nalert tcp any 23 -> any any (msg:\"PROTOCOL-TELNET login failed\"\; flow:to_client,established\; content:\"Login incorrect\"\; nocase\; metadata:ruleset community, service telnet\; classtype:suspicious-login\; sid:492\; rev:15\;)/g' /etc/snort/rules/local.rules
 
 sudo sed -i " s/# config daq: <type>/config daq: nfq/g" /etc/snort/snort.conf
 sudo sed -i " s/# config daq_dir: <dir>/config daq_dir: \/usr\/lib\/daq/g" /etc/snort/snort.conf
