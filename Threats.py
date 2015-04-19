@@ -200,7 +200,6 @@ class Threat(object):
     def get_class_name_list_length(self):
         return len(self._class_name_list)
 
-    # TODO Randomize the sid for the snort rule
     def get_randnum(self):
         return random.randint(1000, 999999)
 
