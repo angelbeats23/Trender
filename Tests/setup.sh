@@ -92,6 +92,16 @@ cd
 sudo apt-get install snort -y;
 # [enter LAN subnet e.g. 10.0.0.0/24]
 
+#create creat snort auto run file
+cd /etc/init.d/
+sudo touch runsnort
+for g in "#!/bin/sh" "case \$1 in" "start)" "echo \"Starting Snort\"" "sudo bash -c \"sudo snort -l \/var\/log\/snort -c \/etc\/snort\/snort.conf -D -Q\"" "echo 'Snort started.'" ";;" "stop)" "echo \"Stopping Snort\"" "sudo service snort stop" "echo 'Snort stopped.'" ";;" "restart)" "\$0 stop" "sleep 4" "\$0 start" ";;" "*)" "echo \"usage: \$0 (start|stop|restart)\"" ";;" "esac" "exit 0"
+do
+    echo $g >> runsnort
+done
+sudo chmod 700 /etc/init.d/runsnort
+sudo update-rc.d runsnort defaults
+
 # additions here.
 sudo sed -i ' s/# additions here./alert icmp any any -> \$HOME_NET any (msg:\"ICMP PING\"\; classtype:not-suspicious\; sid:100002\; rev:1\;)\nalert tcp any any -> any 80 (msg:\"DDOS synflood Attempt\"\; flow:stateless\; flags:S\; classtype:attempted-dos\; sid:1000002; rev:2\;)\nalert tcp any 23 -> any any (msg:\"PROTOCOL-TELNET login failed\"\; flow:to_client,established\; content:\"Login incorrect\"\; nocase\; metadata:ruleset community, service telnet\; classtype:suspicious-login\; sid:492\; rev:15\;)/g' /etc/snort/rules/local.rules
 
@@ -165,8 +175,7 @@ sudo sed -i 's/include \$RULE_PATH\/community-web-php.rules/#include \$RULE_PATH
 sudo rm /var/log/snort/snort.log
 
 # restart snort
-sudo service snort stop
-sudo snort -l /var/log/snort -c /etc/snort/snort.conf -D -Q
+sudo service runsnort restart
 
 # change file permissions
 sudo chown snort:snort /var/log/snort
@@ -236,7 +245,7 @@ sudo chmod 700 /etc/init.d/runbarnyard2
 sudo update-rc.d runbarnyard2 defaults
 
 # start barnyard2
-sudo /etc/init.d/runbarnyard2 start
+sudo service runbarnyard2 start
 
 # changes to the home directory
 cd
@@ -289,8 +298,7 @@ sudo service apache2 restart
 sudo sed -i 's/\$colored_alerts = 0\;/\$colored_alerts = 1\;/g' /var/www/html/base/base_conf.php
 
 # restart snort and barnyard2
-sudo service snort stop
-sudo snort -l /var/log/snort -c /etc/snort/snort.conf -D -Q
-sudo /etc/init.d/runbarnyard2 restart
+sudo service runsnort restart
+sudo service runbarnyard2 restart
 
 

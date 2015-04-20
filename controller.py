@@ -24,8 +24,7 @@ class Controller(threading.Thread):
         self._stop_flag = threading.Event()
         self.flag_stop_thread = False
         self.flag_file_accessed = False
-        self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'snort', 'stop')
-        self.snort_cmd2 = "%s %s %s %s %s %s %s %s" % ('sudo', 'snort', '-l', '/var/log/snort', '-c', '/etc/snort/snort.conf', '-D', '-Q')
+        self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'runsnort', 'restart')
 
         self.ps_dangerous_ip = config.get('pingsweep', 'attackers_ip')
         self.ps_time_limit = config.getint('pingsweep', 'packet_time_limit')
@@ -78,7 +77,6 @@ class Controller(threading.Thread):
     def restart_snort(self, file_accessed):
         if file_accessed is True:
             call(self.snort_cmd, shell=True)
-            call(self.snort_cmd2, shell=True)
             self.flag_file_accessed = False
 
     def mysql_database_retrieval(self):
