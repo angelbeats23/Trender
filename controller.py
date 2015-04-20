@@ -25,7 +25,7 @@ class Controller(threading.Thread):
         self.flag_stop_thread = False
         self.flag_file_accessed = False
         self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'snort', 'stop')
-        self.snort_cmd2 = "%s %s %s %s %s %s %s %s %s %s" % ('sudo', 'snort', '-l', '/var/log/snort', '-c', '/etc/snort/snort.conf', '-D', '-Q', '-S', 'HOME_NET=[10.0.0.0/24]')
+        self.snort_cmd2 = "%s %s %s %s %s %s %s %s" % ('sudo', 'snort', '-l', '/var/log/snort', '-c', '/etc/snort/snort.conf', '-D', '-Q')
 
         self.ps_dangerous_ip = config.get('pingsweep', 'attackers_ip')
         self.ps_time_limit = config.getint('pingsweep', 'packet_time_limit')
