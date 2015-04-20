@@ -81,7 +81,6 @@ sudo dpkg -i libdnet_1.12-1_amd64.deb
 # changes to the home directory
 cd
 
-
 sudo wget https://www.snort.org/downloads/snort/daq-2.0.4.tar.gz
 sudo tar xvfz daq-2.0.4.tar.gz
 cd daq-2.0.4/
