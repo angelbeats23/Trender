@@ -68,7 +68,7 @@ sudo apt-get install git -y;
 
 sudo apt-get install libnet1-dev libnetfilter-queue-dev libnfnetlink-dev libnfnetlink0 libmnl-dev -y;
 
-# install barnyard2 dependency libdnet
+# install libdnet
 sudo wget http://libdnet.googlecode.com/files/libdnet-1.12.tgz
 sudo tar zxvf libdnet-1.12.tgz
 cd libdnet-1.12/
@@ -81,6 +81,7 @@ sudo dpkg -i libdnet_1.12-1_amd64.deb
 # changes to the home directory
 cd
 
+# Install DAQ
 sudo wget https://www.snort.org/downloads/snort/daq-2.0.4.tar.gz
 sudo tar xvfz daq-2.0.4.tar.gz
 cd daq-2.0.4/
@@ -89,10 +90,11 @@ cd daq-2.0.4/
 # changes to the home directory
 cd
 
+# install snort
 sudo apt-get install snort -y;
 # [enter LAN subnet e.g. 10.0.0.0/24]
 
-#create creat snort auto run file
+# create shell script to auto run in IDS Inline mode
 cd /etc/init.d/
 sudo touch runsnort
 for g in "#!/bin/sh" "case \$1 in" "start)" "echo \"Starting Snort\"" "sudo bash -c \"sudo snort -l \/var\/log\/snort -c \/etc\/snort\/snort.conf -D -Q\"" "echo 'Snort started.'" ";;" "stop)" "echo \"Stopping Snort\"" "sudo service snort stop" "echo 'Snort stopped.'" ";;" "restart)" "\$0 stop" "sleep 4" "\$0 start" ";;" "*)" "echo \"usage: \$0 (start|stop|restart)\"" ";;" "esac" "exit 0"
@@ -103,11 +105,13 @@ sudo chmod 700 /etc/init.d/runsnort
 sudo update-rc.d runsnort defaults
 cd
 
-# additions here.
+# WhiteListing alert rules in snorts local.rules
 sudo sed -i ' s/# additions here./alert icmp any any -> \$HOME_NET any (msg:\"ICMP PING\"\; classtype:not-suspicious\; sid:100002\; rev:1\;)\nalert tcp any any -> any 80 (msg:\"DDOS synflood Attempt\"\; flow:stateless\; flags:S\; classtype:attempted-dos\; sid:1000002; rev:2\;)\nalert tcp any 23 -> any any (msg:\"PROTOCOL-TELNET login failed\"\; flow:to_client,established\; content:\"Login incorrect\"\; nocase\; metadata:ruleset community, service telnet\; classtype:suspicious-login\; sid:492\; rev:15\;)/g' /etc/snort/rules/local.rules
 
+# creating a variable for snort to recognise the LAN's subnet
 sudo sed -i " s/ipvar HOME_NET any/ipvar HOME_NET 10.0.0.0\/24/g" /etc/snort/snort.conf
 
+# configure snort in IDS inline mode using the NFQ module
 sudo sed -i " s/# config daq: <type>/config daq: nfq/g" /etc/snort/snort.conf
 sudo sed -i " s/# config daq_dir: <dir>/config daq_dir: \/usr\/lib\/daq/g" /etc/snort/snort.conf
 sudo sed -i " s/# config daq_mode: <mode>/config daq_mode: inline/g" /etc/snort/snort.conf
