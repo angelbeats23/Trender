@@ -17,7 +17,7 @@
 
 
 # updates Ubuntu 14.04.1 LTS Server 64bit
-#sudo apt-get update -y ; sudo apt-get upgrade -y;
+sudo apt-get update -y ; sudo apt-get upgrade -y;
 
 # Setup connection sharing between interfaces in Ubuntu
 
