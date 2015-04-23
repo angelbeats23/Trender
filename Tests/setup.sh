@@ -101,6 +101,7 @@ do
 done
 sudo chmod 700 /etc/init.d/runsnort
 sudo update-rc.d runsnort defaults
+cd
 
 # additions here.
 sudo sed -i ' s/# additions here./alert icmp any any -> \$HOME_NET any (msg:\"ICMP PING\"\; classtype:not-suspicious\; sid:100002\; rev:1\;)\nalert tcp any any -> any 80 (msg:\"DDOS synflood Attempt\"\; flow:stateless\; flags:S\; classtype:attempted-dos\; sid:1000002; rev:2\;)\nalert tcp any 23 -> any any (msg:\"PROTOCOL-TELNET login failed\"\; flow:to_client,established\; content:\"Login incorrect\"\; nocase\; metadata:ruleset community, service telnet\; classtype:suspicious-login\; sid:492\; rev:15\;)/g' /etc/snort/rules/local.rules
