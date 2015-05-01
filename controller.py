@@ -221,7 +221,7 @@ class Controller(threading.Thread):
         resp = opener.open('http://localhost/base/index.php', login_data)
         login_data = urllib.urlencode({'submit' : 'Update Alert Cache'})
         resp2 = opener.open('http://localhost/base/base_maintenance.php', login_data)
-        login_data = urllib.urlencode({'submit' : 'Update IP Cache'})
+        login_data = urllib.urlencode({'submit' : 'Rebuild IP Cache'})
         resp3 = opener.open('http://localhost/base/base_maintenance.php', login_data)
         resp.close()
         resp2.close()
