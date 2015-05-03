@@ -1,17 +1,10 @@
 #!/bin/bash
 
-# Setup needed for gateway in Virtual Box
+# --Getting Setup--
 # two network interfaces
-# eth0: one connected to the internet or public WAN
-# eth1: connected to private or internal LAN
-# on the internet interface configure it to "Allow All" promiscuous Mode
-# 40GB hard drive is required
-# 2GB Memory is required
-# 1 processor minimum
+# eth1: connect to public WAN
+# eth0: connect to the Internet
 # install Ubuntu 14.04.1 LTS Server 64bit (ubuntu-14.04.1-server-amd64.iso) via CD drive
-# Go through the standard Ubuntu configuration process and create a user account (write it down)
-# you may want to enable SSH during the installation process so that you can remote access the server
-# enable both network interfaces on the gateway
 # place this file into the User's home directory and change the permissions to the file to execute (chmod 710)
 # launch the program (sudo ./setup.sh)
 
