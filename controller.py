@@ -27,16 +27,16 @@ class Controller(threading.Thread):
         self.snort_cmd = "%s %s %s %s" % ('sudo', 'service', 'runsnort', 'restart')
 
         self.ps_dangerous_ip = config.get('pingsweep', 'attackers_ip')
-        self.ps_time_limit = config.getint('pingsweep', 'packet_time_limit')
-        self.ps_packets_time_limit = config.getint('pingsweep', 'packets_time_limit')
+        self.ps_time_limit = config.getint('pingsweep', 'recent_timestamp')
+        self.ps_packets_time_limit = config.getint('pingsweep', 'compared_timestamp')
         self.ps_packet_threshold = config.getint('pingsweep', 'packet_threshold')
 
-        self.bf_time_limit = config.getint('bruteforce', 'packet_time_limit')
-        self.bf_packets_time_limit = config.getint('bruteforce', 'packets_time_limit')
+        self.bf_time_limit = config.getint('bruteforce', 'recent_timestamp')
+        self.bf_packets_time_limit = config.getint('bruteforce', 'compared_timestamp')
         self.bf_packet_threshold = config.getint('bruteforce', 'packet_threshold')
 
-        self.dos_time_limit = config.getint('dos', 'packet_time_limit')
-        self.dos_packets_time_limit = config.getint('dos', 'packets_time_limit')
+        self.dos_time_limit = config.getint('dos', 'recent_timestamp')
+        self.dos_packets_time_limit = config.getint('dos', 'compared_timestamp')
         self.dos_packet_threshold = config.getint('dos', 'packet_threshold')
 
         self.base_user = config.get('base', 'user')
