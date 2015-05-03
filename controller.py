@@ -69,7 +69,7 @@ class Controller(threading.Thread):
         if not self._stop_flag.is_set():
             print("database is being written")
         else:
-            print("thread is stopped")
+            print("thread has stopped")
 
     def get_flag(self):
         return self.flag_stop_thread

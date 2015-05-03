@@ -3,7 +3,7 @@ from controller import Controller
 import sys
 import signal
 
-# create the thread object
+# creates the controller's thread object
 controller = Controller()
 
 # spawn a new thread
@@ -14,7 +14,8 @@ def main():
     while True:
         cmd = raw_input("> ")
         if cmd == "status":
-            # you can add extra functions to thread to do what you need
+            # sends a output to the terminal
+            # if threads aren't functioning "
             controller.status()
         else:
             print"unknown command"
