@@ -3,11 +3,12 @@
 # @version 1.0
 # @author Dexter Griffiths <11074220@brookes.ac.uk>
 #
+# This class works but it coded badly. It needs further refactoring
 
 
 class PacketDB:
-
     def __init__(self):
+        # list of IP packet field data. Holds each entire packet by index number
         self._source_ip = []
         self._source_port = []
         self._destination_ip = []
@@ -28,6 +29,7 @@ class PacketDB:
         self._class_name_list = []
 
     def get_sorted_syn_source_ip_list(self):
+        # returns all unique source IP addresses from the source ip list in the (SYN) PacketDB object
         del self._class_name_data[:]
         for item in self._source_ip:
             if item in self._class_name_data:
@@ -37,6 +39,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_sorted_syn_destination_ip_list(self):
+        # returns all unique destination IP addresses from the destination ip list in the (SYN) PacketDB object
         del self._class_name_data[:]
         for item in self._destination_ip:
             if item in self._class_name_data:
@@ -46,6 +49,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_sorted_syn_destination_port_list(self):
+        # returns all unique destination ports from the destination port list in the (SYN) PacketDB object
         del self._class_name_data[:]
         for item in self._destination_port:
             if item in self._class_name_data:
@@ -55,6 +59,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_syn_flood_source_ip(self):
+        # returns all source ip addresses from packets that have a classtype "attempted-dos"
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
@@ -64,6 +69,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_syn_flood_destination_ip(self):
+        # returns all destination ip addresses from packets that have a classtype "attempted-dos"
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
@@ -73,6 +79,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_syn_flood_destination_port(self):
+        # returns all destination port from packets that have a classtype "attempted-dos"
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
@@ -82,6 +89,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_syn_flood_timestamp(self):
+        # returns all timestamps from packets that have a classtype "attempted-dos"
         count = 0
         del self._class_name_data[:]
         for item in self._class_name:
@@ -91,6 +99,7 @@ class PacketDB:
         return self._class_name_data
 
     def get_sorted_icmp_source_ip_list(self):
+        # returns all unique source IP addresses from the source ip list in the (ICMP) PacketDB object
         del self.icmp_packet_data[:]
         for item in self._source_ip:
             if item in self.icmp_packet_data:
@@ -100,6 +109,7 @@ class PacketDB:
         return self.icmp_packet_data
 
     def get_icmp_source_ip(self):
+        # returns all source IP addresses from packets that have a empty destination port value
         count = 0
         del self.icmp_packet_data[:]
         for item in self._destination_port:
@@ -109,6 +119,7 @@ class PacketDB:
         return self.icmp_packet_data
 
     def get_icmp_destination_ip(self):
+        # returns all destination IP addresses from packets that have a empty destination port value
         count = 0
         del self.icmp_packet_data[:]
         for item in self._destination_port:
@@ -118,6 +129,7 @@ class PacketDB:
         return self.icmp_packet_data
 
     def get_icmp_timestamp(self):
+        # returns all destination ports from packets that have a empty destination port value
         count = 0
         del self.icmp_packet_data[:]
         for item in self._destination_port:
@@ -127,6 +139,7 @@ class PacketDB:
         return self.icmp_packet_data
 
     def parameter_alias(self, parameter_description):
+        # function to replace duplicate code, but not used yet
         temp_list = []
         if parameter_description in 's_ip':
             temp_list = self._source_ip_list
@@ -145,6 +158,7 @@ class PacketDB:
         return temp_list
 
     def get_unique_parameter_list(self, packet_param):
+        # function to replace duplicate code, but not used yet
         temp_list = self.parameter_alias(packet_param)
         unique_packet_db = []
         for item in temp_list:
@@ -155,6 +169,7 @@ class PacketDB:
         return unique_packet_db
 
     def get_protocol_lists(self, search_param, required_item, packet_param):
+        # function to replace duplicate code, but not used yet
         search_list = self.parameter_alias(search_param)
         unique_packet_list = []
         packet_list = self.parameter_alias(packet_param)
@@ -166,6 +181,7 @@ class PacketDB:
         return unique_packet_list
 
     def get_sorted_telnet_source_ip_list(self):
+        # returns all unique source IP addresses from the source ip list in the (Telnet) PacketDB object
         del self._telnet_packet_data[:]
         for item in self._source_ip:
             if item in self._telnet_packet_data:
@@ -175,6 +191,7 @@ class PacketDB:
         return self._telnet_packet_data
 
     def get_sorted_telnet_destination_ip_list(self):
+        # returns all unique destination IP addresses from the destination ip list in the (Telnet) PacketDB object
         del self._telnet_packet_data[:]
         for item in self._destination_ip:
             if item in self._telnet_packet_data:
@@ -184,6 +201,7 @@ class PacketDB:
         return self._telnet_packet_data
 
     def get_telnet_source_ip(self):
+        # returns all source IP addresses from packets that have a source port value of 23
         count = 0
         del self._telnet_packet_data[:]
         for item in self._source_port:
@@ -194,6 +212,7 @@ class PacketDB:
         return self._telnet_packet_data
 
     def get_telnet_destination_ip(self):
+        # returns all destination IP addresses from packets that have a source port value of 23
         count = 0
         del self._telnet_packet_data[:]
         for item in self._source_port:
@@ -204,6 +223,7 @@ class PacketDB:
         return self._telnet_packet_data
 
     def get_telnet_timestamp(self):
+        # returns all timestamps from packets that have a source port value of 23
         count = 0
         del self._telnet_packet_data[:]
         for item in self._source_port:
@@ -274,6 +294,7 @@ class PacketDB:
         return len(self._class_name)
 
     def empty_db(self):
+        # Empty all lists to reuse in the next anomaly detection cycle
         self._source_ip = []
         self._source_port = []
         self._destination_ip = []
