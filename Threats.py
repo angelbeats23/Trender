@@ -1,3 +1,8 @@
+#
+# Threat Super Class
+# @version 1.0
+# @author Dexter Griffiths <11074220@brookes.ac.uk>
+#
 from datetime import datetime, timedelta
 import random
 
