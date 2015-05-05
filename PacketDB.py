@@ -3,7 +3,7 @@
 # @version 1.0
 # @author Dexter Griffiths <11074220@brookes.ac.uk>
 #
-# This class works but it coded badly. It needs further refactoring
+# This class works but it's coded badly. It needs further refactoring
 
 
 class PacketDB:
