@@ -3,7 +3,6 @@ import random
 
 
 class Threat(object):
-
     def __init__(self, s_ip='any', s_port='any', dst_ip='any', dst_port='any'):
         self._source_ip = s_ip
         self._source_port = s_port
@@ -21,28 +20,40 @@ class Threat(object):
         self._payload_list = []
         self._class_name_list = []
 
+        # Boolean to indicate an attack has occur or not
         self._attack_identified = False
+
+        # Sets the format for timestamps values in datetime objects
         self.t_format = '%Y-%m-%d %H:%M:%S'
 
+        # stores the snort reject rule
         self._rule_against_attackers = ''
 
+        # Boolean to indicate an attack has occur or not
         self._dangerous_parameter_detected = False
 
     def check_all_timestamps(self, timestamp_recent, compare_threat_timestamps, min_threat_limit):
         timestamp_counter = 0
+        # Is there enough potential threat packets ( minimum number of timestamps allowed)
         if len(self._timestamp_list) > min_threat_limit:
             for count in range(0, len(self._timestamp_list)-1):
+                # if the current time minus the potential threat packets timestamp < user specified time
                 if (datetime.now() - datetime.strptime(self._timestamp_list[count], self.t_format)) < \
                         timedelta(minutes=timestamp_recent):
                     temp_timestamp = datetime.strptime(self._timestamp_list[count], self.t_format)
                     temp_timestamp1 = datetime.strptime(self._timestamp_list[count+1], self.t_format)
+                    # if the current timestamp and next timestamp is < the user specified time
                     if (temp_timestamp1 - temp_timestamp) < timedelta(seconds=compare_threat_timestamps):
+                        # add one to the identified intrusion packet counter
                         timestamp_counter += 1
+                        # if the number of intrusion is >= user specified number
+                        # then create a snort rule for the intrusion
                         if timestamp_counter >= min_threat_limit:
                             self._attack_identified = True
         return self._attack_identified
 
     def parameter_alias(self, parameter_description):
+        # this function assists the delete_duplicate_parameter()
         temp_list = []
         if parameter_description in 's_ip':
             temp_list = self._source_ip_list
@@ -56,13 +67,12 @@ class Threat(object):
 
     def delete_duplicate_parameter(self, parameter, min_matches):
         # parameter specifies either source ip, source port, destination ip, destination port to search for duplicates
-        # in a list.the function removes duplicates in a list. an check if the minumin number of the parameters
-        # attribute is still left after deleting duplicates. (is there enough packets left to check timestamps against)
+        # in a list.the function removes duplicates in a list. an check if the minimum number of the parameters
+        # attribute is still left after deleting duplicates. (is there enough potential intrusion packets)
         duplicate_list = self.parameter_alias(parameter)
         temp_timestamp_list = self._timestamp_list
         for item in duplicate_list:
             temp_timestamp_list.append(self._timestamp_list[duplicate_list.index(item)])
-
             while duplicate_list.count(item) > 1:
                 duplicate_list.remove(item)
                 del self._timestamp_list[duplicate_list.index(item)]
@@ -75,14 +85,20 @@ class Threat(object):
     def verified_parameters_timestamps(self, parameter, timestamp_recent,
                                              compare_threat_timestamps, threshold):
         timestamp_count = 0
+        # delete duplicate potential intrusion packets
         if self.delete_duplicate_parameter(parameter, threshold) is True:
             for count in range(0, len(self._timestamp_list)-1):
+                # if the current time minus the potential threat packets timestamp < user specified time
                 if (datetime.now() - datetime.strptime(self._timestamp_list[count], self.t_format)) < \
                         timedelta(minutes=timestamp_recent):
                     temp_timestamp_0 = datetime.strptime(self._timestamp_list[count], self.t_format)
                     temp_timestamp_1 = datetime.strptime(self._timestamp_list[count+1], self.t_format)
+                    # if the current timestamp and next timestamp is < the user specified time
                     if (temp_timestamp_1 - temp_timestamp_0) < timedelta(seconds=compare_threat_timestamps):
+                        # add one to the identified intrusion packet counter
                         timestamp_count += 1
+                        # if the number of intrusion is >= user specified number
+                        # then create a snort rule for the intrusion
                         if timestamp_count >= threshold:
                             self._dangerous_parameter_detected = True
         return self._dangerous_parameter_detected
@@ -201,6 +217,8 @@ class Threat(object):
         return len(self._class_name_list)
 
     def get_randnum(self):
+        # returns a random number for the SID of the snort reject rules
+        # else snort service will not execute if there are snort rules with duplicate SID's
         return random.randint(1000, 999999)
 
 
@@ -210,6 +228,7 @@ class BruteForce(Threat):
         super(BruteForce, self).__init__(dst_port='23')
 
     def set_snort_rule_string(self):
+        # Snort reject rule string variable for BruteForce attacks
         snort_rule = "reject tcp {} {} -> {} {} " \
                      "(msg:\"Telnet BruteForce Permission Denied\"; " \
                      "flow:to_server,established; metadata:ruleset community, service telnet; " \
@@ -224,6 +243,7 @@ class PingSweep(Threat):
         super(PingSweep, self).__init__(dst_port='any')
 
     def set_snort_rule_string(self):
+        # Snort reject rule string variable for PingSweep attacks
         snort_rule = "reject icmp {} {} -> {} {} (msg:\"PingSweep Reconnaissance Attack\"; " \
                      "classtype:successful-recon-largescale; sid:{}; " \
                      "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port, Threat.get_randnum(self))
@@ -236,6 +256,7 @@ class SynFlood(Threat):
         super(SynFlood, self).__init__(dst_port='80')
 
     def set_snort_rule_string(self):
+        # Snort reject rule string variable for SYN Flood attacks
         snort_rule = "reject tcp {} {} -> {} {} (msg:\"Syn Flood Attack\"; flow:stateless; flags:S; " \
                      "classtype:successful-dos; sid:{}; " \
                      "rev:1;)\n".format(self._source_ip, self._source_port, self._destination_ip, self._destination_port, Threat.get_randnum(self))
