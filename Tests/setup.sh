@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # By Dexter Griffiths <11074220@brookes.ac.uk>
+# Configuration for Gateway
 # --Getting Setup--
 # two network interfaces
 # eth1: connect to public WAN
