@@ -298,7 +298,7 @@ sudo service apache2 restart
 # set passwords as 123456
 # Click ' Create baseAG'
 # Click ' Now continue to Step 5 '
-
+# Restart gateway device
 
 
 # restart snort and barnyard2
