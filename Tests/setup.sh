@@ -304,5 +304,4 @@ sudo service apache2 restart
 # restart snort and barnyard2
 sudo service runsnort restart
 sudo service runbarnyard2 restart
-sudo reboot
 
