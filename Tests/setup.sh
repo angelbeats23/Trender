@@ -282,6 +282,11 @@ sudo wget http://sourceforge.net/projects/secureideas/files/BASE/base-1.4.5/base
 sudo tar -zxf base-1.4.5.tar.gz
 sudo cp -r base-1.4.5 /var/www/html/base
 sudo chown -R www-data:www-data /var/www/html/base
+
+# Set BASE configurations
+sudo sed -i 's/\$colored_alerts = 0\;/\$colored_alerts = 1\;/g' /var/www/html/base/base_conf.php
+
+# restart apache2
 sudo service apache2 restart
 # account setup is needed to log into BASE when first loading webpage
 # set path : /usr/share/php/adodb
@@ -294,8 +299,7 @@ sudo service apache2 restart
 # Click ' Create baseAG'
 # Click ' Now continue to Step 5 '
 
-# Set BASE configurations
-sudo sed -i 's/\$colored_alerts = 0\;/\$colored_alerts = 1\;/g' /var/www/html/base/base_conf.php
+
 
 # restart snort and barnyard2
 sudo service runsnort restart
